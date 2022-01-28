@@ -1,0 +1,90 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2021
+
+% ready for submission
+\usepackage[preprint]{neurips_2021}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2021}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2021}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2021}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage[colorlinks=true]{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{siunitx}
+
+\title{Spotify feat. Logistic Regression - \\ Popularity, Nothing Else Matters}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+\author{%
+  Sebastian Hoffmann\\
+  Matrikelnummer 5954377\\
+  \texttt{sebastian.hoffmann@student.uni-tuebingen.de} \\
+  \And
+  Yannick Streicher\\
+  Matrikelnummer 5331817\\
+  \texttt{yannick.streicher@student.uni-tuebingen.de} \\
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  What is the musical taste of the world? With the recent rise and global pervasiveness of music streaming services, such as Spotify, Deezer, or Apple Music, answering this question has become tractable. For this, we plan to analyze a \href{https://www.kaggle.com/rodolfofigueroa/spotify-12m-songs}{subset of 1.2 million songs} scraped from Spotify. However, this dataset lacks crucial information about popularity. Thus, an important step of our work is to augment the dataset further by querying the official Spotify REST API for a randomly sampled subset of the data. Besides a birds-eye overview of the musical landscape, e.g. distribution of genres, we want to identify common musical properties shared by popular songs, and likewise, very unpopular songs, using logistic regression. Such properties can be, for instance, tempo, mode, or key.
+\end{abstract}
+
+\section{Introduction}
+The questions we want to answer during our project are: ""
+
+\section{Methods and Data Collection}
+To pursue our overall goal of predicting the popularity of a song given its Spotify features, we have to find good labels that discriminate popular and unpopular songs. 
+However, the Kaggle dataset\footnote{include link} only contains musical song features. 
+Spotify\footnote{link company} includes some metrics that summarize a measure of popularity, derived by preferences of Spotify's users. In the end, two metrics are important for our project, \textit{(i): Popularity:} An integer between 0 and 100 describing how popular a track is. Accoring to Spotify's API description, this metric is determined algorithmically based on the total number of plays a track has, as well as, how recent those plays are. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
+\begin{itemize}
+  \item Starting point: the 12m songs dataset
+  \item Query the rest Api for each song to obtain its popularity metrics
+  \item Query the rest API for each artist of those songs to obtain Artists followers and popularity scores. Note: this is much less than the songs -> easier first overview
+  \item \SI{50}{\percent} of artists on Spotify have less than 393 followers, and \SI{25}{\percent} have less than 45.
+  \item Popularity is equally skewed.
+  \item Popularity and followers are highly correlated! Maybe consider doing a PCA-like transformation to get a singular and corrected value. Notice as well, that there are some artist that are highly unpopular while still having a significant amount of followers. Are these dead people? Lets find out :)
+  \item Include probably famous people from platform like youtube or insta, but who are shitty musicians. For instance, minecraft troll song (Lachlan - Mobs cant handle me).
+  To filter these "indie artists", simply thresholding 'followers' or 'popularity' is not sufficient. Instead we need a PCA to remove the outsider of the distribution.
+\end{itemize}
+
+\section{Data Analysis}
+
+\subsection{Explorative Data Analysis}
+
+\subsection{Dimensionality Reduction}
+
+\subsection{Statistical Analysis}
+For doing ... we applied logistic regression
+
+\section{Discussion}
+Our work is limited because\dots
+In regards to ... we cannot estimate confidence because ...
+
+\end{document}

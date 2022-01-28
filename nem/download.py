@@ -10,7 +10,7 @@ from multiprocessing.pool import ThreadPool
 
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string('file', 'tracks_features.csv', 'the input file')
+flags.DEFINE_string('file', 'data/tracks_features.csv', 'the input file')
 flags.DEFINE_string('out', 'augmented_ds.csv', 'the output file')
 flags.DEFINE_integer('threads', 4, 'the number of download threads', lower_bound=1)
 
