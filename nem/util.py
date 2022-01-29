@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+import ast
 
 
 class ZNorm:
@@ -30,3 +32,26 @@ def subsample2d(X, max_per_bin=25  , bins=51):
                 new_chunks += [chunk[indices]]
 
     return np.concatenate(new_chunks)
+
+
+def load_songs(file):
+    df = pd.read_csv(file)
+    df.artists = df.artists.apply(ast.literal_eval)
+    df.artist_ids = df.artist_ids.apply(ast.literal_eval)
+    df = df.set_index('id')
+    print(df)
+    return df
+
+
+def load_artists(file):
+    df = pd.read_csv(file)
+    df.genres = df.genres.apply(ast.literal_eval)
+
+    if 'id' not in df.columns:
+        df['id'] = df['Unnamed: 0']
+        del df['Unnamed: 0']
+    
+    df = df.set_index('id')
+
+    print(df)
+    return df

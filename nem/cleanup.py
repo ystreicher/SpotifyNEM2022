@@ -5,13 +5,14 @@ from absl import app, flags
 from tueplots import bundles
 
 
-from nem.util import ZNorm, subsample2d
+from nem.util import ZNorm, subsample2d, load_artists, load_songs
 
 
 flags.DEFINE_string('artists', 'artists.csv', 'path to artists dataset')
 flags.DEFINE_string('songs', 'augmented_ds.csv', 'path to augmented song dataset')
 flags.DEFINE_string('out', 'songs_filtered.csv', 'out path')
 flags.DEFINE_float('unpopular_threshold', 0.5, 'at which quantile to classify an artists as unpopular', lower_bound=0.0, upper_bound=1.0)
+flags.DEFINE_bool('dry', False, 'dry run - does not write files')
 FLAGS = flags.FLAGS
 
 
@@ -65,7 +66,14 @@ def filter_artists(artists):
     print(f'unpopular: {n_unpopular} ({100 * n_unpopular / data_mat.shape[0]:.0f}%)')
     print(f'\t* apprx. less than {np.power(10, q_log_follower) - 1:.1f} follower and {q_popularity:.1f} popularity')
 
-    to_keep = ~(is_outlier | is_unpopular)
+
+    # artists without genre
+    no_genre = artists.genres.apply(lambda x: len(x) == 0)
+    n_no_genre = no_genre.sum()
+    print(f'no genre: {n_no_genre} ({100 * n_no_genre / data_mat.shape[0]:.2f}%)')
+
+    # apply filters
+    to_keep = ~(is_outlier | is_unpopular | no_genre)
     print(f'keeping {to_keep.sum()} artists ({100 * to_keep.sum() / data_mat.shape[0]:.2f}% of all artists)')
     filtered_artists = znorm.denormalize(transformed[to_keep] @ V.T)
 
@@ -78,10 +86,18 @@ def filter_artists(artists):
 def main(vargs):
     plt.rcParams.update(bundles.neurips2021())
 
-    tracks = pd.read_csv(FLAGS.songs)
-    artists = pd.read_csv(FLAGS.artists)
+    tracks = load_songs(FLAGS.songs)
+    artists = load_artists(FLAGS.artists)
 
     filtered_artists = filter_artists(artists)
+    
+    tracks['main_artist_id'] = tracks.artist_ids.apply(lambda x: x[0])
+    filtered_tracks = tracks.join(filtered_artists['genres'], on='main_artist_id', how='inner')
+    
+    n_tracks = len(tracks)
+    n_filtered_tracks = len(filtered_tracks)
+    print(f'keeping {n_filtered_tracks} songs ({100 * n_filtered_tracks / n_tracks:.2f}%)')
+    print(filtered_tracks)
 
 
 if __name__ == '__main__':

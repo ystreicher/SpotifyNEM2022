@@ -76,7 +76,7 @@ def main(argv):
 
     df.update(additional_infos, overwrite=True)
     
-    df.to_csv(FLAGS.out)
+    df.to_csv(FLAGS.out, index_label='id')
 
 
 if __name__ == '__main__':
