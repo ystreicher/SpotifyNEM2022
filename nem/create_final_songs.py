@@ -14,6 +14,7 @@ flags.DEFINE_string('out_combined', 'songs_artists_combined.csv', 'the output fi
 
 
 def without_outliers(artists):
+    """Remove outlier artists from the artist dataset"""
 
     # (i): remove artists without followers and with extremely many follis
     print("(i) removing 0.05 and 0.95 percentiles of log followers of artists")
@@ -71,6 +72,7 @@ def without_outliers(artists):
 
 
 def merge_tracks_and_artists(tracks, artists) -> pd.DataFrame:
+    """NOTE: Chose relevant columns here - if you want to include more information"""
 
     # unsafe!
     print("selecting tracks by our new artists")
