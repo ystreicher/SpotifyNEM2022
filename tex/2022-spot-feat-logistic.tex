@@ -62,12 +62,29 @@ The questions we want to answer during our project are: ""
 \section{Methods and Data Collection}
 To pursue our overall goal of predicting the popularity of a song given its Spotify features, we have to find good labels that discriminate popular and unpopular songs. 
 However, the Kaggle dataset\footnote{include link} only contains musical song features. 
-Spotify\footnote{link company} includes some metrics that summarize a measure of popularity, derived by preferences of Spotify's users. In the end, two metrics are important for our project, \textit{(i): Popularity:} An integer between 0 and 100 describing how popular a track is. Accoring to Spotify's API description, this metric is determined algorithmically based on the total number of plays a track has, as well as, how recent those plays are. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
+Spotify\footnote{link company} includes some metrics that summarize a measure of popularity, derived by preferences of Spotify's users. 
+In the end, two metrics are important for our project, \textit{(i): Popularity:} An integer between 0 and 100 describing how popular a track is. 
+According to Spotify's API description, this metric is determined algorithmically based on the total number of plays a track has, as well as, how recent those plays are. 
+Artist popularity is derived from the popularity of its individual tracks. 
+The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. 
+The number can be interpreted as peoples interest in following the new releases of a particular artist.
+
+The starting point for the project was the 1.2m song dataset on Kaggle. 
+For all of those songs, we queried the Spotify API for additional artist information. 
+In total, we queried around \num[]{85 000} artists, each having a popularity score and a number of followers. 
+Additionally, each artist is described by a set of genres.
+
+The range of followers is very large, so we consider the logarithm.
+What stands out immediately is that the popularity, as well as, the number of followers are very unevenly distributed. 
+That is, \SI{50}{\percent} of the artists have less than 393 followers, and \SI{25}{\percent} have less than 45. 
+
+
+
 \begin{itemize}
   \item Starting point: the 12m songs dataset
   \item Query the rest Api for each song to obtain its popularity metrics
   \item Query the rest API for each artist of those songs to obtain Artists followers and popularity scores. Note: this is much less than the songs -> easier first overview
-  \item \SI{50}{\percent} of artists on Spotify have less than 393 followers, and \SI{25}{\percent} have less than 45.
+  \item 
   \item Popularity is equally skewed.
   \item Popularity and followers are highly correlated! Maybe consider doing a PCA-like transformation to get a singular and corrected value. Notice as well, that there are some artist that are highly unpopular while still having a significant amount of followers. Are these dead people? Lets find out :)
   \item Include probably famous people from platform like youtube or insta, but who are shitty musicians. For instance, minecraft troll song (Lachlan - Mobs cant handle me).
