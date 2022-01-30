@@ -77,12 +77,13 @@ def main(vargs):
 
 
     #### Plot
+    indices = np.random.choice(len(embeddings_2), size=20000, replace=False)
     data = pd.DataFrame({
-        'x': embeddings_2[:,0],
-        'y': embeddings_2[:,1],
-        'Genre': y
+        'x': embeddings_2[indices,0],
+        'y': embeddings_2[indices,1],
+        'Genre': y[indices]
     })
-    g = sns.relplot(x='x', y='y', hue='Genre', data=data, height=12, alpha=0.6, s=17, palette='Set1')
+    g = sns.relplot(x='x', y='y', hue='Genre', data=data, height=8, alpha=0.55, s=8, palette='Set1')
     g.set(xticklabels=[], xlabel=None)
     g.set(yticklabels=[], ylabel=None)
     sns.despine(bottom=True, left=True)

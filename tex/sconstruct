@@ -1,0 +1,4 @@
+# Build script
+import os
+env = Environment(ENV=os.environ)
+pdfOutput = env.PDF(target=['report.pdf'], source=['2022-spot-feat-logistic.tex'])

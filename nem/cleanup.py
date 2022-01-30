@@ -20,8 +20,8 @@ def plot_artist_filtering(original, filtered):
     def plot(X):
         subsampled = subsample2d(X)
 
-        plt.figure()
-        plt.scatter(np.power(10, subsampled[:,0]) - 1, subsampled[:, 1], s=0.3)
+        plt.figure(figsize=(2.7,2.7))
+        plt.scatter(np.power(10, subsampled[:,0]) - 1, subsampled[:, 1], s=0.25, alpha=0.6)
         plt.xlabel('Followers')
         plt.ylabel('Popularity')
         plt.xscale('log')
@@ -52,6 +52,8 @@ def filter_artists(artists, create_figures=False):
     X = znorm.normalize(data_mat)
     V, Sigma, _ = np.linalg.svd(np.cov(X, rowvar=False), hermitian=True)
     transformed = X @ V
+
+    print(f'pearson: ', np.corrcoef(X, rowvar=False)[0, 1])
 
     # outlier removal (artists far away from the first principal axis, see scatter plots in the notebooks)
     is_outlier = np.fabs(transformed[:,1]) > 0.8
