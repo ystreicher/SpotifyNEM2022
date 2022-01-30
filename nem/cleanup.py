@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from absl import app, flags
 from tueplots import bundles
 
-
+from nem.genres import get_majority_metagenre
 from nem.util import ZNorm, subsample2d, load_artists, load_songs
 
 
@@ -40,7 +40,7 @@ def plot_artist_filtering(original, filtered):
 
 
 
-def filter_artists(artists):
+def filter_artists(artists, create_figures=False):
     data_mat = np.empty((artists.shape[0], 2))
     data_mat[:, 0] = np.log10(artists.followers + 1)
     data_mat[:, 1] = artists.popularity.values
@@ -78,9 +78,10 @@ def filter_artists(artists):
     filtered_artists = znorm.denormalize(transformed[to_keep] @ V.T)
 
     # plot filtering figures
-    plot_artist_filtering(data_mat, filtered_artists)
+    if create_figures:
+        plot_artist_filtering(data_mat, filtered_artists)
 
-    return artists.loc[to_keep]
+    return artists.loc[to_keep].copy()
 
 
 def main(vargs):
@@ -89,15 +90,25 @@ def main(vargs):
     tracks = load_songs(FLAGS.songs)
     artists = load_artists(FLAGS.artists)
 
-    filtered_artists = filter_artists(artists)
+    filtered_artists = filter_artists(artists, create_figures=True)
     
+    # add metagenre
+    filtered_artists['metagenre'] = filtered_artists.genres.apply(get_majority_metagenre)
+    n_unk_metagenre = np.sum(filtered_artists.metagenre == 'unknown')
+    print(f'{n_unk_metagenre} artists with unknown metagenre ({100*n_unk_metagenre / len(filtered_artists):.2f}%)')
+
     tracks['main_artist_id'] = tracks.artist_ids.apply(lambda x: x[0])
-    filtered_tracks = tracks.join(filtered_artists['genres'], on='main_artist_id', how='inner')
-    
+    filtered_tracks = tracks.join(filtered_artists[['genres', 'metagenre']], on='main_artist_id', how='inner')
+        
     n_tracks = len(tracks)
     n_filtered_tracks = len(filtered_tracks)
     print(f'keeping {n_filtered_tracks} songs ({100 * n_filtered_tracks / n_tracks:.2f}%)')
-    print(filtered_tracks)
+    
+    n_unk_metagenre2 = np.sum(filtered_tracks.metagenre == 'unknown')
+    print(f'{n_unk_metagenre2} songs with unknown metagenre ({100*n_unk_metagenre2 / len(filtered_tracks):.2f}%)')
+
+    if not FLAGS.dry:
+        filtered_tracks.to_csv(FLAGS.out, index_label='id')
 
 
 if __name__ == '__main__':
