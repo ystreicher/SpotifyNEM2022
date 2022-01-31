@@ -1,5 +1,6 @@
 \documentclass{article}
 
+
 % if you need to pass options to natbib, use, e.g.:
 %     \PassOptionsToPackage{numbers, compress}{natbib}
 % before loading neurips_2021
@@ -15,7 +16,7 @@
 %     \usepackage[final]{neurips_2021}
 
 % to avoid loading the natbib package, add option nonatbib:
-%    \usepackage[nonatbib]{neurips_2021}
+% \usepackage[nonatbib]{neurips_2021}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
@@ -72,7 +73,7 @@ With the advent of online self-publishing, it has became very easy and accessabl
 
 There are two metrics that could potentially be considered as a filter criterion: The popularity of an artists and the number of followers. We find that the number of followers is roughly exponentially distributed. After transforming it logarithmically, there is a clear linear relationship between the number of (log) followers and popularity visible (Pearson correlation coefficient: $0.88$, see Figure~\ref{fig:filtering}~left). This indicates that a more robust measure can be derived by combining both metrics into one.
 
-To this end, we transform both followers and popularity using PCA. The first principal component can be seen as a robust measure of artist popularity, whereas the second component indicates the deviation from the linear relationship. Upon further inspection, we find artists such as \emph{\todo{find the minecraft guy}} that while having a significant amount of followers, do not have any successful songs. To further reduce noise, we filter these outliers as well by thresholding the second principal component. This affects $1366$ artists ($1.6\%$). We then threshold the first component to filter $50\%$ of all artists. Finally, we filter all are artists that do not have a genre associated with them (affects $52.26\%$\footnote{Notice that there is a big overlap with unknown artists, presumably since scarce data makes it difficult for Spotify to establish a genre.}).
+To this end, we transform both followers and popularity using PCA. The first principal component can be seen as a robust measure of artist popularity, whereas the second component indicates the deviation from the linear relationship. Upon further inspection, we find artists such as \emph{\todo{find the minecraft guy}} that while having a significant amount of followers, do not have any successful songs. To further reduce noise, we filter these outliers as well by thresholding the second principal component. This affects $1366$ artists ($1.6\%$). We then threshold the first component to filter $50\%$ of all artists. Finally, we filter all are artists that do not have a genre associated with them (affects $52.26\%$\footnote{Notice that there is a big overlap with unknown artists, presumably since scarce data makes it difficult for Spotify to establish a genre. \textit{Y: And, maybe they don't have a label / producer that correctly puts the genre labels into the Spotify Database.}}).
 
 In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset and $31694$ artists in total are retained. This reduces the number of songs left in the dataset to $755472$, or $62.75\%$ of the original size.
 
@@ -85,6 +86,12 @@ In total, if all three steps are applied, $62.8\%$ of all artists are removed fr
   \label{fig:filtering}
 \end{figure}
 
+\section{Data Analysis}
+
+\subsection{Explorative Data Analysis}
+
+\subsection{Dimensionality Reduction}
+
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{../figures/tsne_genres.pdf}
@@ -93,26 +100,44 @@ In total, if all three steps are applied, $62.8\%$ of all artists are removed fr
 \end{figure}
 
 \begin{itemize}
-  \item Starting point: the 12m songs dataset
-  \item Query the rest Api for each song to obtain its popularity metrics
-  \item Query the rest API for each artist of those songs to obtain Artists followers and popularity scores. Note: this is much less than the songs -> easier first overview
-  \item Popularity is equally skewed.
-  \item Popularity and followers are highly correlated! Maybe consider doing a PCA-like transformation to get a singular and corrected value. Notice as well, that there are some artist that are highly unpopular while still having a significant amount of followers. Are these dead people? Lets find out :)
-  \item Include probably famous people from platform like youtube or insta, but who are shitty musicians. For instance, minecraft troll song (Lachlan - Mobs cant handle me).
-  To filter these "indie artists", simply thresholding 'followers' or 'popularity' is not sufficient. Instead we need a PCA to remove the outsider of the distribution.
+  \item Some homogeneous clusters arise, such as rap, classical music and metal. 
+  \item Cluster neighborhoods are interesting. For instance, jazz is neighbor of classical.
+  \item Also, a lot of songs are really mixed.
 \end{itemize}
-
-\section{Data Analysis}
-
-\subsection{Explorative Data Analysis}
-
-\subsection{Dimensionality Reduction}
 
 \subsection{Statistical Analysis}
 For doing ... we applied logistic regression
 
+\textbf{Logisitc Regression}
+Logistic Regression in general enables predicting a binary variable. 
+For this project, this variable is \textit{popular} vs. \textit{unpopular} for individual tracks.
+For the prediction we consider all of the tracks \textit{audio features}. 
+Those features are purely technical and, therefore, we inductively assume that the probability whether a song is popular is only dependent on its audio features. 
+
+To create the labels, we threshold the popularity measure. 
+We perform two different experiments. 
+One tight threshold, labeling only the top \SI{10}{\percent} songs as popular, and one more general one where we use the median to divide the track into two groups.
+To train the classifier we divide the dataset into 80 training and 20 test data.
+Still, despite our outlier removal, the dataset contains much more examples of unpopular songs than popular songs under both thresholding criteria.
+This is problematic as the model gets stuck in predicting \textit{unpopular} for all training examples. 
+Many works have been published to get around this issue. We decided to use a \textit{weighted loss} function to peanalize this behavoir, which is a commonly used technique \cite{haixiangLearningClassimbalancedData2017a}.
+
+To select the right parameters for the model, we use grid search and 5-fold cross validation. Then, the final models are evaluated on the test set to obtain the metrics.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{../figures/roc_logistic.pdf}
+  \caption{artists}
+  \label{fig:filtering}
+\end{figure}
+
 \section{Discussion}
 Our work is limited because\dots
 In regards to ... we cannot estimate confidence because ...
+
+\begin{itemize}
+  \item Song features lack important factors that correlate with song popularity, e.g., is the name of the artist relevant in pop culture. For the analysis we assumed that song popularity is discriminated by features that are only related on the "physical properties" of the song. However, for predicting popularity we might have to respect some "marketing aspects" as well. 
+\end{itemize}
+
 
 \end{document}
