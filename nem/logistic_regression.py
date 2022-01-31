@@ -78,8 +78,10 @@ def train_and_evaluate_logistic(X, y, cv_folds = 5, train_size=0.8):
 
     return (fpr, tpr, roc_auc), report, coefficients, (prob_true, prob_pred, y_prob)
 
-def plot_coefs_barth(coefficients, model_name):
-    # plt.rcParams.update(bundles.neurips2021())
+def plot_coefs_barth(coefficients, model_name, filename):
+    plt.rcParams.update(bundles.neurips2021())
+    fig = plt.figure()
+    plt.clf()
     coefs = pd.DataFrame(
         np.ravel(coefficients),
         columns=["Coefficients"],
@@ -102,16 +104,28 @@ def plot_coefs_barth(coefficients, model_name):
     plt.axvline(x=0, color=".5")
     plt.subplots_adjust(left=0.3)
 
-    plt.savefig(f'figures/logistic_coefs_{model_name}.pdf', bbox_inches='tight')
+    plt.savefig(f'figures/logistic_coefs_{filename}.pdf', bbox_inches='tight')
 
-def plot_calibration_curve(calibration_plot, model_name):
-    (prob_true, prob_pred, y_prob) = calibration_plot
-    disp = CalibrationDisplay(prob_true, prob_pred, y_prob)
-    disp.plot() 
-    plt.savefig(f'figures/calibration_{model_name}.pdf', bbox_inches='tight')
+def plot_calibration_curve(calibration_plots, filename):
+    plt.rcParams.update(bundles.neurips2021())
+    fig = plt.figure()
+    plt.clf()
+    for cali_plot in calibration_plots:
+        (prob_true, prob_pred, y_prob), name = cali_plot
+        plt.plot(prob_pred, prob_true, label=name, marker='o')
+
+    plt.plot([0, 1], [0, 1],'r--')
+    plt.xlim([-.1, 1.1])
+    plt.ylim([-.1, 1.1])
+    plt.xlabel("Mean predicted probability")
+    plt.ylabel("Fraction of positives")
+    plt.legend()
+    plt.savefig(f'figures/calibration_{filename}.pdf', bbox_inches='tight')
 
 def plot_auc_combined(auc1, auc2, names=["first", "second"]):
     plt.rcParams.update(bundles.neurips2021())
+    fig = plt.figure()
+    plt.clf()
     (fpr1, tpr1, roc_auc1) = auc1
     (fpr2, tpr2, roc_auc2) = auc2
 
@@ -156,11 +170,14 @@ def main(argv):
     ## plot and save! 
     plot_auc_combined(auc_plot_general, auc_plot_tight, names=["50\% threshold", "10\% threshold"])
 
-    plot_coefs_barth(coeffs_general, model_name="50\% threshold model")
-    plot_coefs_barth(coeffs_tight, model_name="10\% threshold model")
+    plot_coefs_barth(coeffs_general, model_name="50\% threshold model", filename="50_threshold_model")
+    plot_coefs_barth(coeffs_tight, model_name="10\% threshold model", filename="10_threshold_model")
 
-    plot_calibration_curve(calibration_plot_general, model_name="50\% threshold model")
-    plot_calibration_curve(calibration_plot_tight, model_name="10\% threshold model")
+    plot_calibration_curve(
+        (
+            (calibration_plot_general, "50\% threshold"),
+            (calibration_plot_tight, "10\% threshold")
+        ) , filename="combined")
 
     ## show metrics in terminal
     print("50% threshold model: ")
