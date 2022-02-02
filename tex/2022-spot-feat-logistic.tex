@@ -6,7 +6,7 @@
 % before loading neurips_2021
 
 % ready for submission
-\usepackage[preprint]{neurips_2021}
+\usepackage[preprint, nonatbib]{neurips_2021}
 
 % to compile a preprint version, e.g., for submission to arXiv, add add the
 % [preprint] option:
@@ -17,6 +17,12 @@
 
 % to avoid loading the natbib package, add option nonatbib:
 % \usepackage[nonatbib]{neurips_2021}
+\usepackage[
+backend=biber,
+style=numeric,
+sorting=ynt
+]{biblatex}
+\addbibresource{bibliography.bib}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
@@ -45,11 +51,13 @@
 \author{%
   Sebastian Hoffmann\\
   Matrikelnummer 5954377\\
-  \texttt{sebastian.hoffmann@student.uni-tuebingen.de} \\
+  \texttt{sebastian.hoffmann} \\ 
+  \small \texttt{@student.uni-tuebingen.de} \\ % otherwise authors are below each other
   \And
   Yannick Streicher\\
   Matrikelnummer 5331817\\
-  \texttt{yannick.streicher@student.uni-tuebingen.de} \\
+  \texttt{yannick.streicher} \\ 
+  \small \texttt{@student.uni-tuebingen.de} \\ % otherwise authors are below each other
 }
 
 \begin{document}
@@ -94,7 +102,7 @@ In total, if all three steps are applied, $62.8\%$ of all artists are removed fr
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{../figures/tsne_genres.pdf}
+  \includegraphics[width=0.8\textwidth]{../figures/tsne_genres.pdf}
   \caption{tsne}
   \label{fig:tsne_genres}
 \end{figure}
@@ -110,26 +118,25 @@ For doing ... we applied logistic regression
 
 \textbf{Logisitc Regression}
 Logistic Regression in general enables predicting a binary variable. 
-For this project, this variable is \textit{popular} vs. \textit{unpopular} for individual tracks.
-For the prediction we consider all of the tracks \textit{audio features}. 
+For this project, our variable of interest is beeing \textit{popular} vs. \textit{unpopular} for individual tracks.
+For the prediction we consider the \textit{audio features} for each of the tracks. 
 Those features are purely technical and, therefore, we inductively assume that the probability whether a song is popular is only dependent on its audio features. 
 
-To create the labels, we threshold the popularity measure. 
+To create the labels, apply a threshold the popularity measure. 
 We perform two different experiments. 
 One tight threshold, labeling only the top \SI{10}{\percent} songs as popular, and one more general one where we use the median to divide the track into two groups.
 To train the classifier we divide the dataset into \SI{80}{\percent} training and \SI{20}{\percent} test data.
-Still, despite our outlier removal, the dataset contains much more examples of unpopular songs than popular songs under both thresholding criteria.
-This is problematic as the model gets stuck in predicting \textit{unpopular} for all training examples. 
-Many works have been published to get around this issue. We decided to use a \textit{weighted loss} function to peanalize this behavoir, which is a commonly used technique. % \cite{haixiangLearningClassimbalancedData2017a}.
+As the tight threshold dataset contains a lot more unpopular songs than popular songs, the corresponding logistic regression model easily gets stuck in predicting \textit{unpopular} for all training examples. 
+To address this issue, we follow the state of the art and use a \textit{weighted loss} function to penalize this behavior, which is a commonly used technique.\cite{haixiangLearningClassimbalancedData2017a}.
 
-For the logistic regression we apply l2-regularization and to select the best hyperparameters for the model, we use grid search and 5-fold cross validation. Then, the final models are evaluated on the test set to obtain the metrics.
-In Figure~\ref{fig:roc_curve} we show the  receiver operating characteristic (ROC) for the models.
+For both logistic regression models we apply l2-regularization select the best hyperparameters via grid search, with 5-fold cross validation. Then, the final models are evaluated on individual test sets, respecting the popularity threshold, to obtain the metrics.
+In Figure~\ref{fig:logis_eval} we show the  receiver operating characteristic (ROC) for each model.
 Shortly, the metric describes how the models predictions behave when varying the decision threshold. 
-We observe that the shape of the curve is very smooth, corresponding to the nature of our labels.
+We observe that the shape of the curve is very smooth, which is in accordance to original distribution of the popularity feature from Spotify, i.e., a value between 0 and 100.
 To evaluate the quality of our models we use the area under the ROC curve.
 With respect to this metric it seems like the tight model performs better at discriminating our target variable.
-
-However, if we look closer on how the predictions are distributed (see the calibration plots in Fig.~\ref{fig:calibration}), we see that the predicted distribution of the tight classifier differs from our more general model.
+%
+However, if we look closer on how the predictions are distributed (see the calibration plots in Fig.~\ref{fig:logis_eval}), we see that the predicted distribution of the tight classifier differs from our more general model.
 For the more tight model, we have way less training examples for the popular group, than with the more general model. This could be a potential reason for the shifted distribution.
 
 Since we aim to predict popularity in general, and not to be a real chart striker, we decided to accept the more general model.
@@ -142,31 +149,24 @@ On the flip side we also have negative correlations.
 Acousticness and instrumentalness negatively predict the odds, as well as valence and energy (which are correlated by 0.42 and have a similar interpretation).
 
 \begin{itemize}
-  \item Using multiclass logistic regression suffers from the issue that the top classes are highly imbalanced in contrast to the unpopular classes. Using weight based approaches for the loss function leads bad performances for the classes of the highly rare events. 
+  \item Using multiclass logistic regression suffers from the issue that the top classes are highly imbalanced in contrast to the unpopular classes. Using weight based approaches for the loss function leads bad performances for the classes of the highly rare events (exp 007). 
 \end{itemize}
 
 \begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{../figures/roc_logistic.pdf}
-  \caption{ROC curve}
-  \label{fig:roc_curve}
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{../figures/calibration_combined.pdf}
+  \includegraphics[width=0.42\textwidth]{../figures/calibration_combined.pdf}
+  \qquad
+  \includegraphics[width=0.42\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
   \caption{Calibration}
-  \label{fig:calibration}
+  \label{fig:logis_eval}
 \end{figure}
 
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
-  \caption{Parameters}
-  \label{fig:params}
-\end{figure}
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=0.42\textwidth]{../figures/roc_logistic.pdf}
+%   \caption{Parameters}
+%   \label{fig:params}
+% \end{figure}
   
-\end{figure}
 
 \section{Discussion}
 Our work is limited because\dots
@@ -179,5 +179,6 @@ In regards to ... we cannot estimate confidence because ...
 
 % not working, why?
 % \bibliography{bibliography}
+\printbibliography
 
 \end{document}
