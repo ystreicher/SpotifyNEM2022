@@ -14,5 +14,5 @@
 - ~~2. Data Processing~~
 - 3. TSNE
 - ~~4. Logistic~~
-- ~~5. Discussion~~
+- 5. Discussion
 
