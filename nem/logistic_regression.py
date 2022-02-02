@@ -80,7 +80,7 @@ def train_and_evaluate_logistic(X, y, cv_folds = 5, train_size=0.8):
 
 def plot_coefs_barth(coefficients, model_name, filename):
     plt.rcParams.update(bundles.neurips2021())
-    fig = plt.figure()
+    fig = plt.figure(figsize=(2.7, 2.7))
     plt.clf()
     coefs = pd.DataFrame(
         np.ravel(coefficients),
@@ -99,7 +99,7 @@ def plot_coefs_barth(coefficients, model_name, filename):
             'duration ms', # must write this here, as underscore breaks the plot
             ],
     )
-    coefs.plot(kind="barh", figsize=(9, 7))
+    coefs.plot(kind="barh", figsize=(2.7, 2.7))
     plt.title(model_name)
     plt.axvline(x=0, color=".5")
     plt.subplots_adjust(left=0.3)
@@ -108,7 +108,7 @@ def plot_coefs_barth(coefficients, model_name, filename):
 
 def plot_calibration_curve(calibration_plots, filename):
     plt.rcParams.update(bundles.neurips2021())
-    fig = plt.figure()
+    fig = plt.figure(figsize=(2.7, 2.7))
     plt.clf()
     for cali_plot in calibration_plots:
         (prob_true, prob_pred, y_prob), name = cali_plot
@@ -119,12 +119,13 @@ def plot_calibration_curve(calibration_plots, filename):
     plt.ylim([-.1, 1.1])
     plt.xlabel("Mean predicted probability")
     plt.ylabel("Fraction of positives")
+    plt.title("Calibration plot")
     plt.legend()
     plt.savefig(f'figures/calibration_{filename}.pdf', bbox_inches='tight')
 
 def plot_auc_combined(auc1, auc2, names=["first", "second"]):
     plt.rcParams.update(bundles.neurips2021())
-    fig = plt.figure()
+    fig = plt.figure(figsize=(2.7, 2.7))
     plt.clf()
     (fpr1, tpr1, roc_auc1) = auc1
     (fpr2, tpr2, roc_auc2) = auc2
@@ -171,7 +172,7 @@ def main(argv):
     plot_auc_combined(auc_plot_general, auc_plot_tight, names=["50\% threshold", "10\% threshold"])
 
     plot_coefs_barth(coeffs_general, model_name="50\% threshold model", filename="50_threshold_model")
-    plot_coefs_barth(coeffs_tight, model_name="10\% threshold model", filename="10_threshold_model")
+    plot_coefs_barth(coeffs_tight, model_name="weights 10\% threshold model", filename="10_threshold_model")
 
     plot_calibration_curve(
         (
