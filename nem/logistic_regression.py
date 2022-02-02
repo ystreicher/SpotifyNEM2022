@@ -70,7 +70,7 @@ def train_and_evaluate_logistic(X, y, cv_folds = 5, train_size=0.8):
 
     # evaluate (iii) calibration curve
     y_prob = pipe.predict_proba(X_test)[:, 1]
-    (prob_true, prob_pred) = calibration_curve(y_test, y_prob, n_bins=10)
+    (prob_true, prob_pred) = calibration_curve(y_test, y_prob, n_bins=5, strategy="uniform")
     
 
     # bit of ugly...
@@ -110,11 +110,12 @@ def plot_calibration_curve(calibration_plots, filename):
     plt.rcParams.update(bundles.neurips2021())
     fig = plt.figure(figsize=(2.7, 2.7))
     plt.clf()
+    plt.plot([0, 1], [0, 1],'r--')
+
     for cali_plot in calibration_plots:
         (prob_true, prob_pred, y_prob), name = cali_plot
         plt.plot(prob_pred, prob_true, label=name, marker='o')
 
-    plt.plot([0, 1], [0, 1],'r--')
     plt.xlim([-.1, 1.1])
     plt.ylim([-.1, 1.1])
     plt.xlabel("Mean predicted probability")
@@ -169,7 +170,7 @@ def main(argv):
     auc_plot_tight, evaluation_tight, coeffs_tight, calibration_plot_tight = train_and_evaluate_logistic(X, y_labels_tight)
 
     ## plot and save! 
-    plot_auc_combined(auc_plot_general, auc_plot_tight, names=["50\% threshold", "10\% threshold"])
+    plot_auc_combined(auc_plot_general, auc_plot_tight, names=["50\% threshold model", "10\% threshold model"])
 
     plot_coefs_barth(coeffs_general, model_name="50\% threshold model", filename="50_threshold_model")
     plot_coefs_barth(coeffs_tight, model_name="weights 10\% threshold model", filename="10_threshold_model")
