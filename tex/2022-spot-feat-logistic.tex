@@ -6,6 +6,7 @@
 % before loading neurips_2021
 
 % ready for submission
+\PassOptionsToPackage{numbers, compress}{natbib}
 \usepackage[preprint]{neurips_2021}
 \bibliographystyle{abbrvnat}
 
@@ -35,10 +36,12 @@
 
 \author{%
   Sebastian Hoffmann\thanks{correspondence to \texttt{sebastian.hoffmann@student.uni-tuebingen.de}}\\
-  Matrikelnummer 5954377
+  University of Tübingen\\
+  Matriculation number 5954377\\
   \And
   Yannick Streicher\thanks{correspondence to \texttt{yannick.streicher@student.uni-tuebingen.de}}\\
-  Matrikelnummer 5331817
+  University of Tübingen\\
+  Matriculation number 5331817\\
 }
 
 \begin{document}
@@ -52,37 +55,45 @@
 \section{Introduction}
 The large amount of digital music today can be daunting. To successfully navigate this space, we urgently need better knowledge of the key characteristics of this opaque, highdimensional space. With our work, we want to present two important findings that contribute to this goal in a twofold manner: \textit{First} we create a clear overview of the musical landscape. That is, by applying t-SNE (\todo{cite?}) we show a twodimensional embedding of the high dimensional space of audio tracks. We find clusters that can be labeled as musical \textit{genres}. \textit{Second}, we zoom in and, using logistic regression, distill audio features that are of particular interest when considering the popularity of an audio track.
 
-To pursue our overall goal of predicting the popularity of a song given its Spotify features, we have to find good labels that discriminate popular and unpopular songs. However, the Kaggle dataset\footnote{include link} only contains musical song features. Spotify\footnote{link company} includes some metrics that summarize a measure of popularity, derived by preferences of Spotify's users. In the end, two metrics are important for our project, \textit{(i): Popularity:} An integer between 0 and 100 describing how popular a track is. According to Spotify's API description, this metric is determined algorithmically based on the total number of plays a track has, as well as, how recent those plays are. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
+To pursue our overall goal of predicting the popularity of a song given its Spotify features, we have to find good labels that discriminate popular and unpopular songs. However, the Kaggle dataset only contains musical song features. Spotify includes some metrics that summarize a measure of popularity, derived by preferences of Spotify's users. In the end, two metrics are important for our project, \textit{(i): Popularity:} An integer between 0 and 100 describing how popular a track is. According to Spotify's API description, this metric is determined algorithmically based on the total number of plays a track has, as well as, how recent those plays are. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
 
-\section{Filtering and Preprocessing}
+\section{Dataset}
 
-The starting point for the project was the 1.2m song dataset on Kaggle. For all of those songs, we queried the Spotify API for additional artist information. In total, we queried around \num[]{85 000} artists, each having a popularity score and a number of followers. Additionally, each artist is described by a set of genres.
+While Spotify provides data about individual songs or artists via its API, it does, however, not provide a catalogue of available songs on its platform. Thus, we use a dataset\footnote{\url{https://www.kaggle.com/rodolfofigueroa/spotify-12m-songs}} of $1.2$ million songs made available on Kaggle, a subset of the $70$ million songs accessible on Spotify~\cite{ingham_2020}. This dataset was created by first downloading the \href{https://musicbrainz.org/}{MusicBrainz} catalogue, an open-collaboration database of music releases, and then querying the Spotify API. 
 
-With the advent of online self-publishing, it became very easy and accessible to distribute home-produced music to a worldwide audience. In fact, there exist specialized companies, such as TuneCore or DistroKid for instance, that automatically distribute submitted songs to multiple platforms at the same time, including Spotify and Apple Music. Indeed we find that a quarter of artists on Spotify have less than $45$ followers and half of all artist have less than $393$. For comparison, \emph{Merikan}, a relatively unknown \emph{Drum and Bass} producer, which is not a major genre, has $4581$ follower at the time of writing. Given that self-published songs do not undergo the feedback and quality control process a regular music label would provide to an artist, we are worried that these tracks can potentially introduce a lot of noise to our data. Consequently, we filter our dataset to only include songs of artists that are to some extent known and established and can be considered professional or semi-professional musicians.
+For each song listed, the dataset contains basic meta informations such as artist and song name, as well as a set of $14$ song features that are provided by Spotify. These features include, among others, the estimated tempo, key, \emph{energy}, \emph{danceability}, or duration of the song. For a full list, refer to the Spotify API documentation. Crucially, the \emph{popularity} or genre of a song is not included in this dataset.
 
-There are two metrics that could potentially be considered as a filter criterion: The popularity of an artist and the number of followers. We find that the number of followers is roughly exponentially distributed. After transforming it logarithmically, there is a clear linear relationship between the number of (log) followers and popularity visible (Pearson correlation coefficient: $0.88$, see Figure~\ref{fig:filtering}~left). This indicates that a more robust measure can be derived by combining both metrics into one.
+\subsection{Augmentation}
+In a first step we retrieve additional information of all $85,000$\todo{concrete number} artists appearing in the dataset from the Spotify API. This information include the populartiy of that artist, measured as the cumulative popularity of individual songs, the number of followers, and optionally a list of genres the artist is associated with.
 
-To this end, we transform both followers and popularity using PCA. The first principal component can be seen as a robust measure of artist popularity, whereas the second component indicates the deviation from the linear relationship. Upon further inspection, we find artists such as \emph{\todo{find the minecraft guy}} that while having a significant amount of followers, do not have any successful songs. To further reduce noise, we filter these outliers as well by thresholding the second principal component. This affects $1366$ artists ($1.6\%$). We then threshold the first component to filter $50\%$ of all artists. Finally, we filter all artists that do not have a genre associated with them (affects $52.26\%$\footnote{Notice that there is a big overlap with unknown artists, presumably since scarce data makes it difficult for Spotify to establish a genre.}).
+Additionally, we query the Spotify API for every song in the dataset to obtain its individual popularity. While Spotify does not provide genre information at song level, we use the genre information associated with the first artist to further augment the dataset. The exact procedure is described in Section~\ref{sec:genre}. 
 
-In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset and $31694$ artists in total are retained. This reduces the number of songs left in the dataset to $755472$, or $62.75\%$ of the original size.
+\subsection{Filtering and preprocessing}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.42\textwidth]{../figures/artists_unfiltered.pdf}
+  \includegraphics[width=0.38\textwidth]{../figures/artists_unfiltered.pdf}
   \qquad
-  \includegraphics[width=0.42\textwidth]{../figures/artists_filtered.pdf}
+  \includegraphics[width=0.38\textwidth]{../figures/artists_filtered.pdf}
   \caption{\textit{Left}: Artist popularity against log-followers before applying our filtering rules. \textit{Right}: We use the result of PCA to exclude artists that are outliers with respect to the first and second principal component.}
   \label{fig:filtering}
 \end{figure}
 
+To reduce potential noise introduced by unknown self-published artists, we want to restrict our analysis to those that can be considered professional or semi-professional musicians. This step was deemed necessary, as self-published artists do not undergo the feedback and quality control process a regular music label would provide. Indeed, we find that a quarter of artists on Spotify have less than $45$ followers and half of all artist have less than $393$. For comparison, \emph{Merikan}, a relatively unknown \emph{Drum and Bass} producer, has $4581$ follower at the time of writing.
+
+We find that the number of followers is roughly exponentially distributed. After applying a logarithmic transform, a clear linear relationship between the number of (log) followers and popularity is visible (Pearson correlation coefficient: $0.88$, c.f. Fig.~\ref{fig:filtering},~left). 
+
+Based on the popularity and log-follower count, we derive a robust filter criterion using principal component analysis~(PCA)~\cite{jolliffe2016principal}. After applying PCA, the first principal component becomes a measure of the successfulness of an artist, taking both his popularity and followers into account. We threshold this measure to only include $50\%$ of all artists. Furthermore, we threshold the second component as well to remove outliers, i.e. artists with high discrepancy between popularity and followers. This step affects $1.6\%$ of all artists. Finally, we filter those without associated genres.
+
+In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset and $31694$ artists in total are retained. This reduces the number of songs left in the dataset to $755472$, $62.75\%$ of the original size.
+
+\section{Genre analysis}
+\label{sec:genre}
+
+
 \section{Dimensionality Reduction - Clustering Song Genres}
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.8\textwidth]{../figures/tsne_genres.pdf}
-  \caption{tsne}
-  \label{fig:tsne_genres}
-\end{figure}
+
 
 \begin{itemize}
   \item Some homogeneous clusters arise, such as rap, classical music and metal. 
@@ -147,10 +158,20 @@ In regards to ... we cannot estimate confidence because ...
   \item Song features lack important factors that correlate with song popularity, e.g., is the name of the artist relevant in pop culture. For the analysis we assumed that song popularity is discriminated by features that are only related on the "physical properties" of the song. However, for predicting popularity we might have to respect some "marketing aspects" as well. 
 \end{itemize}
 
-
-% not working, why?
-% \bibliography{bibliography}
-%\printbibliography
 \bibliography{bibliography}
+
+\begin{appendix}
+\section{Appendix}
+
+\newpage
+
+\begin{figure}
+  \centering
+  \includegraphics[width=1.0\textwidth]{../figures/tsne_genres.pdf}
+  \caption{tsne}
+  \label{fig:tsne_genres}
+\end{figure}
+
+\end{appendix}
 
 \end{document}
