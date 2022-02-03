@@ -66,9 +66,9 @@ For each song listed, the dataset contains basic meta informations such as artis
 \subsection{Augmentation}
 In a first step we retrieve additional information of all $85,000$\todo{concrete number} artists appearing in the dataset from the Spotify API. This information include the populartiy of that artist, measured as the cumulative popularity of individual songs, the number of followers, and optionally a list of genres the artist is associated with.
 
-Additionally, we query the Spotify API for every song in the dataset to obtain its individual popularity. While Spotify does not provide genre information at song level, we use the genre information associated with the first artist to further augment the dataset. The exact procedure is described in Section~\ref{sec:genre}. 
+Additionally, we query the Spotify API for every song in the dataset to obtain its individual popularity. While Spotify does not provide genre information at song level, we use the genre information associated with the first artist to further augment the dataset. The exact procedure is described in Section~\ref{sec:genre_clustering}. 
 
-\subsection{Filtering and preprocessing}
+\subsection{Filtering}
 
 \begin{figure}[t]
   \centering
@@ -79,29 +79,25 @@ Additionally, we query the Spotify API for every song in the dataset to obtain i
   \label{fig:filtering}
 \end{figure}
 
-To reduce potential noise introduced by unknown self-published artists, we want to restrict our analysis to those that can be considered professional or semi-professional musicians. This step was deemed necessary, as self-published artists do not undergo the feedback and quality control process a regular music label would provide. Indeed, we find that a quarter of artists on Spotify have less than $45$ followers and half of all artist have less than $393$. For comparison, \emph{Merikan}, a relatively unknown \emph{Drum and Bass} producer, has $4581$ follower at the time of writing.
+To reduce potential noise introduced by unknown self-published artists, we want to restrict our analysis to those that can be considered professional or semi-professional musicians. This step was deemed necessary, as self-published artists do not undergo the feedback and quality control process a regular music label would provide. Indeed, we find that a quarter of artists on Spotify have less than $45$ followers and half of all artist have less than $393$. For comparison, \emph{Merikan}, a relatively unknown Drum and Bass producer, has $4581$ follower at the time of writing.
 
-We find that the number of followers is roughly exponentially distributed. After applying a logarithmic transform, a clear linear relationship between the number of (log) followers and popularity is visible (Pearson correlation coefficient: $0.88$, c.f. Fig.~\ref{fig:filtering},~left). 
+We find that the number of followers is roughly exponentially distributed. After applying a logarithmic transform, a clear linear relationship between the number of log-followers and popularity is visible (Pearson correlation coefficient: $0.88$, c.f. Fig.~\ref{fig:filtering},~left). 
 
-Based on the popularity and log-follower count, we derive a robust filter criterion using principal component analysis~(PCA)~\cite{jolliffe2016principal}. After applying PCA, the first principal component becomes a measure of the successfulness of an artist, taking both his popularity and followers into account. We threshold this measure to only include $50\%$ of all artists. Furthermore, we threshold the second component as well to remove outliers, i.e. artists with high discrepancy between popularity and followers. This step affects $1.6\%$ of all artists. Finally, we filter those without associated genres.
+Based on the popularity and log-follower count, we derive a robust filter criterion using principal component analysis~(PCA)~\cite{jolliffe2016principal}. After applying PCA, the first principal component is treated as a measure of the successfulness of an artist, taking both his popularity and followers into account. We threshold this measure to only include $50\%$ of all artists. Furthermore, we threshold the second component as well to remove outliers, i.e. artists with a high discrepancy between popularity and follower count. This step affects $1.6\%$ of all artists. Finally, we exclude those without associated genres.
 
-In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset and $31694$ artists in total are retained. This reduces the number of songs left in the dataset to $755472$, $62.75\%$ of the original size.
+In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset and $31694$ artists in total are retained. This reduces the number of songs left in the dataset to $755472$ ($62.75\%$ of the original size).
 
-\section{Genre analysis}
-\label{sec:genre}
+\subsection{Finding metagenres by clustering}
+\label{sec:genre_clustering}
+The genres associated with an artist are often very fine-granulated. Out of \todo{$111$} genres in total, only \todo{$111$} have more than \todo{$123$} artists associated with them. Based on interviews~\cite{maicki_2020} and manual inspection of the data, we hypothesize that these genres are often found by Spotify using clustering of feature representations from the underlying recommender system combined with manual annotation.
 
+To reduce the number of overall genres to a handful of overarching \emph{metagenres}, such as Rock, Jazz, or Hip-Hop, we employ agglomerative clustering~\cite{ward1963hierarchical} (we use~\cite{scikit-learn}). Agglomerative clustering lends itself naturally for this task as it exploits the inherent hierachical relationship between genres and indeed we found the best results with this approach.
 
-\section{Dimensionality Reduction - Clustering Song Genres}
+Inspired by constrastive methods~\cite{mikolov2013efficient, chen2020simple}, we exploit the fact that related genres are more likely to be associated with the same artist to construct a distance measure. In a first step, a similarity measure $s(g_1, g_2)$ between two genres $g_1, g_2$ is defined by diving the number of times $g_1$ appears together with $g_2$ by \todo{todo}. The distance between $g_1$ and $g_2$ can then be defined as the reciprocal of that similarity measure\footnote{does not necessarily adhere to the triangle inequality.}. We then use this distance measure for the clustering procedure.
 
+\section{Experiments}
 
-
-\begin{itemize}
-  \item Some homogeneous clusters arise, such as rap, classical music and metal. 
-  \item Cluster neighborhoods are interesting. For instance, jazz is neighbor of classical.
-  \item Also, a lot of songs are really mixed.
-\end{itemize}
-
-\section{Statistical Analysis - Logistic Regression}
+\subsection{Logistic Regression}
 For this project, our variable of interest is beeing \textit{popular} vs. \textit{unpopular} for individual tracks.
 For the prediction we consider the \textit{audio features} for each of the tracks. 
 Those features are purely technical and, therefore, we inductively assume that the probability whether a song is popular is only dependent on its audio features. 
