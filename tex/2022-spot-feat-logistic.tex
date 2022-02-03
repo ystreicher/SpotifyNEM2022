@@ -22,7 +22,7 @@
 \usepackage{siunitx}
 \usepackage{graphicx}
 
-\newcommand{\todo}[1]{{\color{red} #1}}
+\newcommand{\todo}[1]{{\color{red}todo: #1}}
 
 \title{Spotify feat. Logistic Regression - \\ Popularity, Nothing Else Matters}
 
@@ -64,7 +64,7 @@ While Spotify provides data about individual songs or artists via its API, it do
 For each song listed, the dataset contains basic meta informations such as artist and song name, as well as a set of $14$ song features that are provided by Spotify. These features include, among others, the estimated tempo, key, \emph{energy}, \emph{danceability}, or duration of the song. For a full list, refer to the Spotify API documentation. Crucially, the \emph{popularity} or genre of a song is not included in this dataset.
 
 \subsection{Augmentation}
-In a first step we retrieve additional information of all $85,000$\todo{concrete number} artists appearing in the dataset from the Spotify API. This information include the populartiy of that artist, measured as the cumulative popularity of individual songs, the number of followers, and optionally a list of genres the artist is associated with.
+In a first step we retrieve additional information of all $85,000$\todo{concrete number} artists appearing in the dataset from the Spotify API. This information include the populartiy of that artist, aggregated from individual songs, the number of followers, and optionally a list of genres the artist is associated with.
 
 Additionally, we query the Spotify API for every song in the dataset to obtain its individual popularity. While Spotify does not provide genre information at song level, we use the genre information associated with the first artist to further augment the dataset. The exact procedure is described in Section~\ref{sec:genre_clustering}. 
 
@@ -89,13 +89,17 @@ In total, if all three steps are applied, $62.8\%$ of all artists are removed fr
 
 \subsection{Finding metagenres by clustering}
 \label{sec:genre_clustering}
-The genres associated with an artist are often very fine-granulated. Out of \todo{$111$} genres in total, only \todo{$111$} have more than \todo{$123$} artists associated with them. Based on interviews~\cite{maicki_2020} and manual inspection of the data, we hypothesize that these genres are often found by Spotify using clustering of feature representations from the underlying recommender system combined with manual annotation.
+The genres associated with an artist are often very fine-granulated. Out of \todo{$111$} genres in total, only \todo{$111$} have more than \todo{$123$} artists associated with them. To reduce the number of overall genres to a handful of overarching \emph{metagenres}, such as Rock, Jazz, or Hip-Hop, we employ agglomerative clustering~\cite{ward1963hierarchical} (we use~\cite{scikit-learn}). Agglomerative clustering lends itself naturally for this task as it exploits the inherent hierachical relationship between genres.
 
-To reduce the number of overall genres to a handful of overarching \emph{metagenres}, such as Rock, Jazz, or Hip-Hop, we employ agglomerative clustering~\cite{ward1963hierarchical} (we use~\cite{scikit-learn}). Agglomerative clustering lends itself naturally for this task as it exploits the inherent hierachical relationship between genres and indeed we found the best results with this approach.
+Inspired by constrastive methods~\cite{mikolov2013efficient, chen2020simple}, we exploit the fact that related genres are more likely to be associated with the same artist to construct a distance measure. In a first step, a similarity measure $s_{i, j} = (2 n_{ij}) / (N_i + N_j)$ between the $i$-th and $j$-th genre is defined, where $n_{ij}$ denotes the number of times they appear together and $N_i, N_j$ the total counts of the $i$-th and $j$-th genre respectively. The distance can then be defined as the reciprocal of that similarity measure. We then use this distance measure for the clustering procedure.
 
-Inspired by constrastive methods~\cite{mikolov2013efficient, chen2020simple}, we exploit the fact that related genres are more likely to be associated with the same artist to construct a distance measure. In a first step, a similarity measure $s(g_1, g_2)$ between two genres $g_1, g_2$ is defined by diving the number of times $g_1$ appears together with $g_2$ by \todo{todo}. The distance between $g_1$ and $g_2$ can then be defined as the reciprocal of that similarity measure\footnote{does not necessarily adhere to the triangle inequality.}. We then use this distance measure for the clustering procedure.
+By running the clustering algorithm on an aggressively filtered subset of genres, we find $32$ metagenres, among them Jazz, Classical, Metal, Rock, Pop, or EDM, but also Soundtrack, or Show Tunes\footnote{Metagenres have been manually annotated}. These cover $60.5\%$ of all songs in the filtered dataset. To further improve coverage of songs, we rerun the clustering with less aggressive filtering to include more fine-grained genres. We then manually append these additional subgenres to the appropriate metagenre if applicable. This improves coverage to $71.3\%$.
 
 \section{Experiments}
+
+\subsection{Feature exploration}
+
+Before 
 
 \subsection{Logistic Regression}
 For this project, our variable of interest is beeing \textit{popular} vs. \textit{unpopular} for individual tracks.
