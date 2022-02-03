@@ -6,23 +6,8 @@
 % before loading neurips_2021
 
 % ready for submission
-\usepackage[preprint, nonatbib]{neurips_2021}
-
-% to compile a preprint version, e.g., for submission to arXiv, add add the
-% [preprint] option:
-%     \usepackage[preprint]{neurips_2021}
-
-% to compile a camera-ready version, add the [final] option, e.g.:
-%     \usepackage[final]{neurips_2021}
-
-% to avoid loading the natbib package, add option nonatbib:
-% \usepackage[nonatbib]{neurips_2021}
-\usepackage[
-backend=biber,
-style=numeric,
-sorting=ynt
-]{biblatex}
-\addbibresource{bibliography.bib}
+\usepackage[preprint]{neurips_2021}
+\bibliographystyle{abbrvnat}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
@@ -49,15 +34,11 @@ sorting=ynt
 % \AND instead of \And before the third author name.
 
 \author{%
-  Sebastian Hoffmann\\
-  Matrikelnummer 5954377\\
-  \texttt{sebastian.hoffmann} \\ 
-  \small \texttt{@student.uni-tuebingen.de} \\ % otherwise authors are below each other
+  Sebastian Hoffmann\thanks{correspondence to \texttt{sebastian.hoffmann@student.uni-tuebingen.de}}\\
+  Matrikelnummer 5954377
   \And
-  Yannick Streicher\\
-  Matrikelnummer 5331817\\
-  \texttt{yannick.streicher} \\ 
-  \small \texttt{@student.uni-tuebingen.de} \\ % otherwise authors are below each other
+  Yannick Streicher\thanks{correspondence to \texttt{yannick.streicher@student.uni-tuebingen.de}}\\
+  Matrikelnummer 5331817
 }
 
 \begin{document}
@@ -137,9 +118,9 @@ Acousticness and instrumentalness negatively predict the odds, as well as valenc
 
 
 \begin{figure}
-  \includegraphics[width=0.42\textwidth]{../figures/calibration_combined.pdf}
-  \qquad
-  \includegraphics[width=0.42\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
+  %\includegraphics[width=0.42\textwidth]{../figures/calibration_combined.pdf}
+  %\qquad
+  %\includegraphics[width=0.42\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
   \caption{\textit{Left}: Calibration plot following the methodology of \cite{niculescu-mizilPredictingGoodProbabilities2005}. The prediction space is discretized into 5 bins. Using the test set, for each bin, we plot the fraction of true popular songs against the mean predicted probability for those songs. \textit{Right}: The coefficients of the selected model for each audio feature. For the interpretation of individual features consider the API documentation of Spotify.}
   \label{fig:logis_eval}
 \end{figure}
@@ -169,6 +150,7 @@ In regards to ... we cannot estimate confidence because ...
 
 % not working, why?
 % \bibliography{bibliography}
-\printbibliography
+%\printbibliography
+\bibliography{bibliography}
 
 \end{document}
