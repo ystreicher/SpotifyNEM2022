@@ -81,22 +81,23 @@ Additionally, we query the Spotify API for every song in the dataset to obtain i
 
 \subsection{Filtering}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.38\textwidth]{../figures/artists_unfiltered.pdf}
-  \qquad
-  \includegraphics[width=0.38\textwidth]{../figures/artists_filtered.pdf}
-  \caption{\textit{Left}: Artist popularity against log-followers before applying our filtering rules. \textit{Right}: We use the result of PCA to exclude artists that are outliers with respect to the first and second principal component.}
-  \label{fig:filtering}
-\end{figure}
+%\begin{figure}[t]
+%  \centering
+%  \includegraphics[width=0.38\textwidth]{../figures/artists_unfiltered.pdf}
+%  \qquad
+%  \includegraphics[width=0.38\textwidth]{../figures/artists_filtered.pdf}
+%  \caption{\textit{Left}: Artist popularity against log-followers before applying our filtering rules. \textit{Right}: We use the result of PCA to exclude artists that are outliers with respect to the first and second principal component.}
+%  \label{fig:filtering}
+%\end{figure}
 
-To reduce potential noise introduced by unknown self-published artists, we want to restrict our analysis to those that can be considered professional or semi-professional musicians. This step was deemed necessary, as self-published artists do not undergo the feedback and quality control process a regular music label would provide. Indeed, we find that a quarter of artists on Spotify have less than $45$ followers and half of all artist have less than $393$. For comparison, \emph{Merikan}, a relatively unknown Drum and Bass producer, has $4581$ follower at the time of writing.
+To reduce potential noise introduced by unknown self-published artists, we want to restrict our analysis to those that can be considered professional or semi-professional musicians. This step was deemed necessary, as self-published artists do not undergo the feedback and quality control process a regular music label would provide. Indeed, we find that a quarter of artists on Spotify have less than $45$ followers and half of all artist have less than $393$.
+%For comparison, \emph{Merikan}, a relatively unknown Drum and Bass producer, has $4581$ follower at the time of writing.
 
 We find that the number of followers is roughly exponentially distributed. After applying a logarithmic transform, a clear linear relationship between the number of log-followers and popularity is visible (Pearson correlation coefficient: $0.88$, c.f. Fig.~\ref{fig:filtering},~left). 
 
 Based on the popularity and log-follower count, we derive a robust filter criterion using principal component analysis~(PCA)~\cite{jolliffe2016principal}. After applying PCA, the first principal component is treated as a measure of the successfulness of an artist, taking both his popularity and followers into account. We threshold this measure to only include $50\%$ of all artists. Furthermore, we threshold the second component as well to remove outliers, i.e. artists with a high discrepancy between popularity and follower count. This step affects $1.6\%$ of all artists. Finally, we exclude those without associated genres.
 
-In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset and $31694$ artists in total are retained. This reduces the number of songs left in the dataset to $755472$ ($62.75\%$ of the original size).
+In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset. This reduces the number of songs left in the dataset to $755472$ ($62.75\%$).
 
 \subsection{Finding metagenres by clustering}
 \label{sec:genre_clustering}
@@ -110,9 +111,16 @@ By running the clustering algorithm on an aggressively filtered subset of genres
 
 \subsection{Genre analysis}
 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.85\textwidth]{../figures/popularity_distribution_by_genre.pdf}
+  \caption{Box plot of popularity grouped by genre. Boxes span $Q1$ to $Q3$,while whiskers indicate the last datum less than $1.5\cdot\text{IQR}$. The central line shows the median of the distribution.}
+  \label{fig:genre_boxplot}
+\end{figure}
+
 The most prelevant genre on Spotify is Classical ($20.6\%$), followed by Rock ($7.9\%$), Rap / Hip-Hop ($7.6\%$), Metal ($6.3\%$), Folk ($6.0\%$), and Jazz ($4.0\%$). For a full overview, we refer to the supplementary material available on github\footnote{\url{https://github.com/ystreicher/SpotifyNEM2022}}.
 
-To investigate how genre might relate to popularity, we inspect the individual distributions using a box plot that is also part of the supplementary material. We find that despite  being the most prominent genre, Clasical and Contempory Classical are by far the most unpopular with the majority of the probability mass below $10\%$. Notably, Pop has by far the heaviest tails and the highest median and $75$-th percentile of all genres despite only making up $2.9\%$ of all songs. Following after Pop, we find that Country, EDM, Latin, Rock, Indie Pop, Hip-Hop, and Metalcore are almost equally popular.  
+The box plot presented in Fig.~\ref{fig:genre_boxplot} shows the distribution of popularity for each genre. We find that despite  being the most prominent genre, Clasical and Contempory Classical are by far the most unpopular with the majority of the probability mass below $10\%$. Notably, Pop has by far the heaviest tails and the highest median and $75$-th percentile of all genres despite only making up $2.9\%$ of all songs. Following after Pop, we find that Country, EDM, Latin, Rock, Indie Pop, Hip-Hop, and Metalcore are almost equally popular.  
 
 Lastly, as a preliminary experiment for the logistic regression, we investigate the discriminative power of the song features provided by Spotify. For this, we embedd the features of songs of the six most popular genres into a two-dimensional vector space using t-SNE~\cite{van2008visualizing} (we use~\cite{Policar731877}). Results are presented in Fig.~\ref{fig:tsne_genres} in the appendix. Clearly visible are distinct cluster of songs corresponding to genres such as Hip-Hop, Metal, Classical or Jazz. Additionally, genres that are arguably related to each other, such as Rock and Metal, or Jazz and Classical, are clustered close together or have some overlap.
 
@@ -157,9 +165,10 @@ Learned coefficients for model B are given in Fig.~\ref{fig:logis_eval} (right).
 
 
 \begin{figure}
-  \includegraphics[width=0.42\textwidth]{../figures/calibration_combined.pdf}
+  \centering
+  \includegraphics[width=0.39\textwidth]{../figures/calibration_combined.pdf}
   \qquad
-  \includegraphics[width=0.42\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
+  \includegraphics[width=0.39\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
   \caption{\textit{Left}: Calibration plot following the methodology of \cite{niculescu-mizilPredictingGoodProbabilities2005}. The prediction space is discretized into 5 bins. Using the test set, for each bin, we plot the fraction of true popular songs against the mean predicted probability for those songs. \textit{Right}: The coefficients of the selected model for each audio feature. For the interpretation of individual features consider the API documentation of Spotify.}
   \label{fig:logis_eval}
 \end{figure}
