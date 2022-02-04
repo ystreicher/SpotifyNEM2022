@@ -2,6 +2,8 @@
 
 ![](figures/github/popularity_distribution_by_genre.png)
 
+![](figures/github/genre_distribution.png)
+
 ## Todo
 
 - ~~For a subset of artists / songs, get a list of related items~~
