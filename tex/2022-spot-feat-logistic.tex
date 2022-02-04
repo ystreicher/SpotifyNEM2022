@@ -53,8 +53,14 @@
 \end{abstract}
 
 \section{Introduction}
+
+%With the recent advent of musical streaming services, such as Spotify, or Apple Music, unprecedented amounts of data became readily available to a public audience. This data can often be accessed free-of-charge using an API provided by the service provider itself.
+
+
 %% general overview - i) we want dataset and clusters, ii) we want to predict popularity
-The large amount of digital music today can be daunting. To successfully navigate this space, we urgently need better knowledge of the key characteristics of this opaque, highdimensional space. With our work, we want to present two important findings that contribute to this goal in a twofold manner: \textit{First} we create a clear overview of the musical landscape. That is, by applying t-SNE (\todo{cite?}) we show a twodimensional embedding of the high dimensional space of audio tracks. We find clusters that can be labeled as musical \textit{genres}. \textit{Second}, we zoom in and, using logistic regression, distill audio features that are of particular interest when considering the popularity of an audio track.
+%The large amount of digital music today can be daunting. To successfully navigate this space, we urgently need better knowledge of the key characteristics of this opaque, highdimensional space.
+
+With our work, we want to present two important findings that contribute to this goal in a twofold manner: \textit{First} we create a clear overview of the musical landscape. That is, by applying t-SNE (\todo{cite?}) we show a twodimensional embedding of the high dimensional space of audio tracks. We find clusters that can be labeled as musical \textit{genres}. \textit{Second}, we zoom in and, using logistic regression, distill audio features that are of particular interest when considering the popularity of an audio track.
 
 % motivation for the data: aggregate popularity measures with audio features
 % or, we are guided by spots popularity measure
@@ -62,6 +68,7 @@ To predict the popularity of a song given its Spotify features, we have to find 
 To measure users responses to individual songs, Spotify presents two metrics, \textit{(i): Popularity:} An algorithmically determined integer between 0 and 100 (more is better), based on the total number of (recent) plays a track has. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
 
 \section{Dataset}
+\label{sec:dataset}
 
 While Spotify provides data about individual songs or artists via its API, it does, however, not provide a catalogue of available songs on its platform. Thus, we use a dataset\footnote{\url{https://www.kaggle.com/rodolfofigueroa/spotify-12m-songs}} of $1.2$ million songs made available on Kaggle, a subset of the $70$ million songs accessible on Spotify~\cite{ingham_2020}. This dataset was created by first downloading the \href{https://musicbrainz.org/}{MusicBrainz} catalogue, an open-collaboration database of music releases, and then querying the Spotify API. 
 
@@ -107,33 +114,46 @@ The most prelevant genre on Spotify is Classical ($20.6\%$), followed by Rock ($
 
 To investigate how genre might relate to popularity, we inspect the individual distributions using a box plot that is also part of the supplementary material. We find that despite  being the most prominent genre, Clasical and Contempory Classical are by far the most unpopular with the majority of the probability mass below $10\%$. Notably, Pop has by far the heaviest tails and the highest median and $75$-th percentile of all genres despite only making up $2.9\%$ of all songs. Following after Pop, we find that Country, EDM, Latin, Rock, Indie Pop, Hip-Hop, and Metalcore are almost equally popular.  
 
-Lastly, as a preliminary experiment for the logistic regression, we investigate the discriminative power of the song features provided by Spotify. For this, we embedd the features of songs of the six most popular genres into a two-dimensional vector space using t-SNE~\cite{van2008visualizing} (we use \cite{Policar731877}). Results are presented in Fig.~\ref{fig:tsne_genres} in the appendix. Clearly visible are distinct cluster of songs corresponding to genres such as Hip-Hop, Metal, Classical or Jazz. Additionally, genres that are arguably related to each other, such as Rock and Metal, or Jazz and Classical, are clustered close together or have some overlap.
+Lastly, as a preliminary experiment for the logistic regression, we investigate the discriminative power of the song features provided by Spotify. For this, we embedd the features of songs of the six most popular genres into a two-dimensional vector space using t-SNE~\cite{van2008visualizing} (we use~\cite{Policar731877}). Results are presented in Fig.~\ref{fig:tsne_genres} in the appendix. Clearly visible are distinct cluster of songs corresponding to genres such as Hip-Hop, Metal, Classical or Jazz. Additionally, genres that are arguably related to each other, such as Rock and Metal, or Jazz and Classical, are clustered close together or have some overlap.
 
 \subsection{Logistic Regression}
 % implicit assumtion: popularity = f(audio features)
-For this project, the variable of interest is being \textit{popular} vs. \textit{unpopular} for individual tracks.
-For the prediction we consider the \textit{audio features} for each of the tracks. 
-Those features are purely technical and, therefore, we inductively assume that the probability whether a song is popular is only dependent on its audio features. 
+%For this project, the variable of interest is being \textit{popular} vs. \textit{unpopular} for individual tracks.
+%For the prediction we consider the \textit{audio features} for each of the tracks. 
+We use logistic regression to classify songs as either popular or unpopular using the audio features (c.f. Section~\ref{sec:dataset}) provided by Spotify. 
+
+Binary labels are obtained by thresholding the popularity value of a song. Despite our aggressive filtering, we found that the popularity is roughly exponentially distributed. To deal with such a highly-skewed distribution, we try two thresholding strategies:
+\begin{enumerate}
+  \item[(A)] Any song with populartiy below the $90$-th percentile is labelled \emph{unpopular}, otherwise as \emph{popular}. To counteract the class-imbalance, the class weights are adjusted as detailed in~\cite{haixiangLearningClassimbalancedData2017a}.
+  \item[(B)] The songs are evenly split into two classes at the $50$-th percentile.
+\end{enumerate}
+
+In all experiments a 80-20 train-test split is used, and $\ell_2$-regularizaton is employed in both cases. To find the optimal regularization strength, we performed a grid-search using 5-fold cross validation on the training set.
+
+Results are presented in Fig.~\ref{fig:logis_eval}~(left). While achieving a sligthly higher AUC ($0.73$ vs $0.68$), model A is significantly worse calibrated than model B which used a balanced thresholding strategy. Despite the reweigthing, there exists a strong bias towards the \emph{unpopular} class in model A. For further evaluation, we will thus restrict ourself to model B.
+
+%Those features are purely technical and, therefore, we inductively assume that the probability whether a song is popular is only dependent on its audio features. 
 
 % thresholding at 10%, 50% => inbalanced groups in 10% dataset
-To create the labels, we apply a threshold to the popularity measure. 
-We perform two different experiments. 
-One with tight threshold, labeling only the top \SI{10}{\percent} songs as popular, and one more general one, where we use the median to divide the track into two groups.
-As the tight threshold dataset contains a lot more unpopular songs than popular songs, the corresponding logistic regression model easily gets stuck in predicting \textit{unpopular} for all training examples. 
-To address this issue, we follow the state of the art and use a \textit{weighted loss} function to penalize this behavior~\cite{haixiangLearningClassimbalancedData2017a}.
+%To create the labels, we apply a threshold to the popularity measure. 
+%We perform two different experiments. 
+%One with tight threshold, labeling only the top \SI{10}{\percent} songs as popular, and one more general one, where we use the median to divide the track into two groups.
+%As the tight threshold dataset contains a lot more unpopular songs than popular songs, the corresponding logistic regression model easily gets stuck in predicting \textit{unpopular} for all training examples. 
+%To address this issue, we follow the state of the art and use a \textit{weighted loss} function to penalize this behavior~\cite{haixiangLearningClassimbalancedData2017a}.
 
 % training
-We split the dataset into \SI{80}{\percent} training and \SI{20}{\percent} test data.
-For both logistic regression models we apply l2-regularization and select the best hyperparameters via grid search, using 5-fold cross validation. 
-Then, the final models are evaluated on individual test sets, respecting their popularity threshold.
-Despite having a higher ROC-AUC score (tight model: \num{0.73} vs. wide model: \num{0.68}) the tight model performs worse at predicting the probability of being popular for individual songs, as seen in the calibration plots in Fig.~\ref{fig:logis_eval}, left.
+%We split the dataset into \SI{80}{\percent} training and \SI{20}{\percent} test data.
+%For both logistic regression models we apply l2-regularization and select the best hyperparameters via grid search, using 5-fold cross validation. 
+%Then, the final models are evaluated on individual test sets, respecting their popularity threshold.
+%Despite having a higher ROC-AUC score (tight model: \num{0.73} vs. wide model: \num{0.68}) the tight model performs worse at predicting the probability of being popular for individual songs, as seen in the calibration plots in Fig.~\ref{fig:logis_eval}, left.
 
 % weight interpretation - elaborate what stood out
-To find out how individual features influence the prediction we look into the learned coefficients of the better performing regression model, c.f.~Fig.\ref{fig:logis_eval}, right.
-Weights in logistic regression have a linear relationship with the \textit{odds} of an outcome of the target variable.
-Our analysis shows, that especially \textit{loudness} and \textit{danceability} correspond to higher odds of being popular.
-These findings align with phenomena such as the \textit{loudness war}\cite{vickers2010loudness} of recorded music which emerged in the last years.
-On the flip side, \emph{acousticness} and \emph{instrumentalness} negatively predict the odds, as well as \emph{valence} and \emph{energy}.
+Learned coefficients for model B are given in Fig.~\ref{fig:logis_eval} (right). Especially loudness and danceability seem to be indicative of popularity according to the model. In contrast, acousticness, instrumentalness, and valence appear to have a negative impact.
+%To find out how individual features influence the prediction we look into the learned coefficients of the better performing regression model, c.f.~Fig.\ref{fig:logis_eval}, right.
+%Weights in logistic regression have a linear relationship with the \textit{odds} of an outcome of the target variable.
+%Our analysis shows, that especially \textit{loudness} and \textit{danceability} correspond to higher odds of being popular.
+%These findings align with phenomena such as the \textit{loudness war}\cite{vickers2010loudness} of recorded music which emerged in the last years.
+%On the flip side, \emph{acousticness} and \emph{instrumentalness} negatively predict the odds, as well as \emph{valence} and \emph{energy}.
 
 
 \begin{figure}
@@ -159,7 +179,7 @@ On the flip side, \emph{acousticness} and \emph{instrumentalness} negatively pre
 % Logistic Discussion
 %% limitations 1: Popularity Label Selection
 In our experiments we binned songs by their popularity score into two classes. However, one could argue whether popularity is a discrete or a continuous quantity. Using logistic regression with multiple classes lead to worse results. That is, because the more popular classes are highly imbalanced in contrast to the unpopular classes, and weight-based approaches lead to general overestimation of popularity.
-One would potentially have to investigate the under-the-hood workings of Spotify's popularity score to find a good representation of our interests.
+%One would potentially have to investigate the under-the-hood workings of Spotify's popularity score to find a good representation of our interests.
 
 %% Limitations 2: Popularity is not a function of Audio features
 %% Loudness only shows that popular songs are high-end productions
