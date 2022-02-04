@@ -102,36 +102,36 @@ By running the clustering algorithm on an aggressively filtered subset of genres
 Before 
 
 \subsection{Logistic Regression}
-For this project, our variable of interest is beeing \textit{popular} vs. \textit{unpopular} for individual tracks.
+% implicit assumtion: popularity = f(audio features)
+For this project, the variable of interest is being \textit{popular} vs. \textit{unpopular} for individual tracks.
 For the prediction we consider the \textit{audio features} for each of the tracks. 
 Those features are purely technical and, therefore, we inductively assume that the probability whether a song is popular is only dependent on its audio features. 
 
+% thresholding at 10%, 50% => inbalanced groups in 10% dataset
 To create the labels, we apply a threshold to the popularity measure. 
 We perform two different experiments. 
-One tight threshold, labeling only the top \SI{10}{\percent} songs as popular, and one more general one where we use the median to divide the track into two groups.
-To train the classifier we divide the dataset into \SI{80}{\percent} training and \SI{20}{\percent} test data.
+One with tight threshold, labeling only the top \SI{10}{\percent} songs as popular, and one more general one, where we use the median to divide the track into two groups.
 As the tight threshold dataset contains a lot more unpopular songs than popular songs, the corresponding logistic regression model easily gets stuck in predicting \textit{unpopular} for all training examples. 
 To address this issue, we follow the state of the art and use a \textit{weighted loss} function to penalize this behavior~\cite{haixiangLearningClassimbalancedData2017a}.
 
-For both logistic regression models we apply l2-regularization and select the best hyperparameters via grid search, using 5-fold cross validation. Then, the final models are evaluated on individual test sets, respecting their popularity threshold.
-At first it seems that the tight model performs better then the wide model, getting an AUC score of \num{0.73} vs. \num{0.68} for the wide model.
-%
-However, if we look closer on how the predictions are distributed (see the calibration plots in Fig.~\ref{fig:logis_eval}), we clearly see that the tight model highly overestimates the probability of beeing popular.
+% training
+We split the dataset into \SI{80}{\percent} training and \SI{20}{\percent} test data.
+For both logistic regression models we apply l2-regularization and select the best hyperparameters via grid search, using 5-fold cross validation. 
+Then, the final models are evaluated on individual test sets, respecting their popularity threshold.
+Despite having a higher ROC-AUC score (tight model: \num{0.73} vs. wide model: \num{0.68}) the tight model performs worse at predicting the probability of being popular for individual songs, as seen in the calibration plots in Fig.~\ref{fig:logis_eval}, left.
 
-Since we aim to predict popularity in general, and not to be a real chart striker, we decided to accept the more general model.
-To find out how each features influence the prediction we look into the learned coefficients of our regression model, c.f.~Fig.\ref{fig:logis_eval}.
+% weight interpretation - elaborate what stood out
+To find out how individual features influence the prediction we look into the learned coefficients of the better performing regression model, c.f.~Fig.\ref{fig:logis_eval}, right.
 Weights in logistic regression have a linear relationship with the \textit{odds} of an outcome of the target variable.
-Our analysis shows, that especially \textit{loudness} and \textit{danceability} correspond to a higher odds of beeing popular.
-These findings align with phenomena such as the \textit{loudness war}\footnote{reference} of recorded music which emerged in the last years.
-Finding that \textit{danceability} correlates with higher odds of beeing popular could be pontentially be an indication that gives hints to the answer of our overall thesis - the humankind seems to like music that can be danced on.
-On the flip side we also have negative correlations. 
-Acousticness and instrumentalness negatively predict the odds, as well as valence and energy (which are correlated by 0.42 and have a similar interpretation).
+Our analysis shows, that especially \textit{loudness} and \textit{danceability} correspond to higher odds of being popular.
+These findings align with phenomena such as the \textit{loudness war}\cite{vickers2010loudness} of recorded music which emerged in the last years.
+On the flip side, \emph{acousticness} and \emph{instrumentalness} negatively predict the odds, as well as \emph{valence} and \emph{energy}.
 
 
 \begin{figure}
-  %\includegraphics[width=0.42\textwidth]{../figures/calibration_combined.pdf}
-  %\qquad
-  %\includegraphics[width=0.42\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
+  \includegraphics[width=0.42\textwidth]{../figures/calibration_combined.pdf}
+  \qquad
+  \includegraphics[width=0.42\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
   \caption{\textit{Left}: Calibration plot following the methodology of \cite{niculescu-mizilPredictingGoodProbabilities2005}. The prediction space is discretized into 5 bins. Using the test set, for each bin, we plot the fraction of true popular songs against the mean predicted probability for those songs. \textit{Right}: The coefficients of the selected model for each audio feature. For the interpretation of individual features consider the API documentation of Spotify.}
   \label{fig:logis_eval}
 \end{figure}
@@ -145,18 +145,23 @@ Acousticness and instrumentalness negatively predict the odds, as well as valenc
   
 
 \section{Discussion}
-Our work is limited because\dots
-In regards to ... we cannot estimate confidence because ...
 
-\begin{itemize}
-  \item Using multiclass logistic regression suffers from the issue that the top classes are highly imbalanced in contrast to the unpopular classes. Using weight based approaches for the loss function leads bad performances for the classes of the highly rare events (exp 007). 
-  \item it is somehow adversarial that energy and valence negativly predict the odds, while danceability positively predict the odds, while for instance valence and danceability are correlated by 0.59.
-\end{itemize}
+% does our dataset represent the population? Can we express certaintly?
 
-\begin{itemize}
-  \item For the more tight model, we have way less training examples for the popular group, then with the more general model. This could be a potential reason for the shifted distribution.
-  \item Song features lack important factors that correlate with song popularity, e.g., is the name of the artist relevant in pop culture. For the analysis we assumed that song popularity is discriminated by features that are only related on the "physical properties" of the song. However, for predicting popularity we might have to respect some "marketing aspects" as well. 
-\end{itemize}
+% Logistic Discussion
+%% limitations 1: Popularity Label Selection
+In our experiments we binned songs by their popularity score into two classes. However, one could argue whether popularity is a discrete or a continuous quantity. Using logistic regression with multiple classes lead to worse results. That is, because the more popular classes are highly imbalanced in contrast to the unpopular classes, and weight-based approaches lead to general overestimation of popularity.
+One would potentially have to investigate the under-the-hood workings of Spotify's popularity score to find a good representation of our interests.
+
+%% Limitations 2: Popularity is not a function of Audio features
+%% Loudness only shows that popular songs are high-end productions
+Our logistic model revealed some features to potentially predict the popularity value of individual songs, but the results are to some extent dissonant. Because they express a somewhat similar emotion, one would expect \emph{energy, valence} and \emph{danceability} to influence the prediction in the same direction. Especially, since the latter two are correlated by \num{0.59}.
+% Moreover, the pairwise correlation of the audio features is relatively high in this dataset which additionally unsharpens the interpretability of the model's parameters.
+We distilled \emph{loudness} as the most influential audio feature. 
+\emph{Does it mean, songs with higher loudness are more popular?} Modelling popularity as a function of audio features is brave. The results present us the evidence that there are important confounding factors that apply to song popularity. 
+Popular artists have access to high-end audio production studios. This could be reflected in the loudness weight.
+But, finally, finding that \textit{danceability} correlates with higher odds of being popular could potentially be an indication that gives hints to the answer of our overall thesis~-~humankind seems to like music that one can dance to.
+
 
 \bibliography{bibliography}
 
