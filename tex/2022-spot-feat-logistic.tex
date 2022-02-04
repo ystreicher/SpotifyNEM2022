@@ -53,9 +53,13 @@
 \end{abstract}
 
 \section{Introduction}
+%% general overview - i) we want dataset and clusters, ii) we want to predict popularity
 The large amount of digital music today can be daunting. To successfully navigate this space, we urgently need better knowledge of the key characteristics of this opaque, highdimensional space. With our work, we want to present two important findings that contribute to this goal in a twofold manner: \textit{First} we create a clear overview of the musical landscape. That is, by applying t-SNE (\todo{cite?}) we show a twodimensional embedding of the high dimensional space of audio tracks. We find clusters that can be labeled as musical \textit{genres}. \textit{Second}, we zoom in and, using logistic regression, distill audio features that are of particular interest when considering the popularity of an audio track.
 
-To pursue our overall goal of predicting the popularity of a song given its Spotify features, we have to find good labels that discriminate popular and unpopular songs. However, the Kaggle dataset only contains musical song features. Spotify includes some metrics that summarize a measure of popularity, derived by preferences of Spotify's users. In the end, two metrics are important for our project, \textit{(i): Popularity:} An integer between 0 and 100 describing how popular a track is. According to Spotify's API description, this metric is determined algorithmically based on the total number of plays a track has, as well as, how recent those plays are. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
+% motivation for the data: aggregate popularity measures with audio features
+% or, we are guided by spots popularity measure
+To predict the popularity of a song given its Spotify features, we have to find good labels that discriminate popular and unpopular songs.
+To measure users responses to individual songs, Spotify presents two metrics, \textit{(i): Popularity:} An algorithmically determined integer between 0 and 100 (more is better), based on the total number of (recent) plays a track has. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
 
 \section{Dataset}
 
@@ -64,7 +68,7 @@ While Spotify provides data about individual songs or artists via its API, it do
 For each song listed, the dataset contains basic meta informations such as artist and song name, as well as a set of $14$ song features that are provided by Spotify. These features include, among others, the estimated tempo, key, \emph{energy}, \emph{danceability}, or duration of the song. For a full list, refer to the Spotify API documentation. Crucially, the \emph{popularity} or genre of a song is not included in this dataset.
 
 \subsection{Augmentation}
-In a first step we retrieve additional information of all $85,000$\todo{concrete number} artists appearing in the dataset from the Spotify API. This information include the populartiy of that artist, aggregated from individual songs, the number of followers, and optionally a list of genres the artist is associated with.
+In a first step we retrieve additional information of all $85,113$ artists appearing in the dataset from the Spotify API. This information include the populartiy of that artist, aggregated from individual songs, the number of followers, and optionally a list of genres the artist is associated with.
 
 Additionally, we query the Spotify API for every song in the dataset to obtain its individual popularity. While Spotify does not provide genre information at song level, we use the genre information associated with the first artist to further augment the dataset. The exact procedure is described in Section~\ref{sec:genre_clustering}. 
 
