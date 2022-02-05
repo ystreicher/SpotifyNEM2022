@@ -110,7 +110,7 @@ By running the clustering algorithm on an aggressively filtered subset of genres
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{../figures/popularity_distribution_by_genre.pdf}
+  \includegraphics[width=0.85\textwidth]{../figures/popularity_distribution_by_genre.pdf}
   \caption{Box plot of popularity grouped by genre. Boxes span $Q1$ to $Q3$,while whiskers indicate the $5$-th and $95$-th percentile respectively. The central line shows the median of the distribution. Among all genres, Pop has the highest median and $95$-th percentile.}
   \label{fig:genre_boxplot}
 \end{figure}
@@ -140,9 +140,9 @@ Nevertheless, we show learned coefficients of model B in Fig.~\ref{fig:logis_eva
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.35\textwidth]{../figures/calibration_combined.pdf}
+  \includegraphics[width=0.39\textwidth]{../figures/calibration_combined.pdf}
   \qquad
-  \includegraphics[width=0.35\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
+  \includegraphics[width=0.39\textwidth]{../figures/logistic_coefs_50_threshold_model.pdf}
   \caption{\textit{Left}: Calibration plot. The prediction space is discretized into \num{20} bins. Using the test set, for each bin, we plot the fraction of true popular songs against the mean predicted probability for those songs. \textit{Right}: The coefficients of the selected model for each audio feature. For the interpretation of individual features consider the API documentation of Spotify.}
   \label{fig:logis_eval}
 \end{figure}
