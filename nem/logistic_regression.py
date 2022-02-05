@@ -46,61 +46,54 @@ def train_and_evaluate_logistic(X, y, popularity, cv_folds = 5, train_size=0.8):
     ## ML Pipeline
     pipe = make_pipeline(
         StandardScaler(),
-        #LinearRegression(),
-        MLPRegressor(verbose=True)
-
-        #GridSearchCV(
-        #    LogisticRegression(),   
-        #    param_grid={
-        #    'penalty': ['l2'],
-        #    'class_weight': ['balanced'],
+        GridSearchCV(
+           LogisticRegression(),   
+           param_grid={
+           'penalty': ['l2'],
+           'class_weight': ['balanced'],
             # 'l1_ratio': [0.5],
             # 'solver': ['saga'],
-        #    'C': np.logspace(-3, 3, 5)
-        #    },
-        #    cv=2,
-        #    refit=True
-        #)
+           'C': np.logspace(-3, 3, 5)
+           },
+           cv=2,
+           refit=True
+        )
     )
 
     # train
     pipe.fit(X_train, y_train)
 
-    # evaluate (i) ROC and AUC
-    # calculate the fpr and tpr for all thresholds of the classification
-    #probs = pipe.predict_proba(X_test)
-    #preds = probs[:,1]
+    probs = pipe.predict_proba(X_test)
+    predicted_proba = probs[:,1] # choose positive class
+    predicted_binary = pipe.predict(X_test)
 
-    #preds = 1 / (1 + np.exp(-pipe.predict(X_test)))
-    preds = np.exp(pipe.predict(X_test))
-    y_test = np.exp(y_test)
+    pred_as_popularity = predicted_proba * 100
+
 
     plt.figure()
-    plt.hist(preds, range=(0.0, 1.0))
+    plt.hist(predicted_proba, range=(0.0, 1.0))
     plt.savefig('figures/pred_hist.pdf')
     plt.close()
 
-    print(np.fabs(preds - y_test).mean())
-    print(np.power(preds - y_test, 2).mean())
+    print(np.fabs(pred_as_popularity - pop_test).mean())
+    print(np.power(pred_as_popularity - pop_test, 2).mean())
 
-    """
-    fpr, tpr, threshold = roc_curve(y_test, preds)
-    roc_auc = auc(fpr, tpr)
+    # evaluate (i) ROC and AUC
+    # fpr, tpr, threshold = roc_curve(y_test, preds)
+    # roc_auc = auc(fpr, tpr)
 
     # evaluate (ii) metrics for logistic regression
-    predictions = pipe.predict(X_test)
-    report = classification_report(y_test, predictions)
-    """
+    report = classification_report(y_test, predicted_binary)
 
     # evaluate (iii) calibration curve
-    bins = np.quantile(y_test, np.linspace(0.01, 1., 15))
+    bins = np.quantile(pop_test, np.linspace(0.1, 1, 20))
 
-    bin_grouping = np.digitize(y_test, bins)
-    prob_true = np.array([(y_test[bin_grouping == bin_idx]/100).mean() for bin_idx in range(len(bins))])
-    prob_pred = np.array([preds[bin_grouping == bin_idx].mean() for bin_idx in range(len(bins))])
-    print(bins)
-    print(prob_true)
-    print(prob_pred)
+    bin_grouping = np.digitize(pop_test, bins) - 1
+    prob_true = np.array([(pop_test[bin_grouping == bin_idx]).mean() for bin_idx in range(len(bins))])
+    prob_pred = np.array([(predicted_proba[bin_grouping == bin_idx]).mean() for bin_idx in range(len(bins))])
+    # print(bins)
+    # print(prob_true)
+    # print(prob_pred)
     #y_prob = pipe.predict_proba(X_test)[:, 1]
     #(prob_true, prob_pred) = calibration_curve((popularity/100)[indices_test], y_prob, n_bins=5, strategy="uniform")
     
@@ -108,12 +101,13 @@ def train_and_evaluate_logistic(X, y, popularity, cv_folds = 5, train_size=0.8):
     # bit of ugly...
     coefficients = np.ravel(pipe.steps[1][1].best_estimator_.coef_)
 
+    # TODO: this must be changed for real roc curves
     fpr = 0.
     tpr = 0.
     roc_auc = 0.
-    report = None
+    # report = None
 
-    return (fpr, tpr, roc_auc), report, coefficients, (prob_true, prob_pred, preds)
+    return (fpr, tpr, roc_auc), report, coefficients, (prob_true, prob_pred, None)
 
 
 def plot_coefs_barth(coefficients, model_name, filename):
@@ -125,9 +119,9 @@ def plot_coefs_barth(coefficients, model_name, filename):
         columns=["Coefficients"],
         index=['danceability',
             'energy',
-            'key',
+            # 'key',
             'loudness',
-            'mode',
+            # 'mode',
             'speechiness',
             'acousticness',
             'instrumentalness',  # extremly discriminative!
@@ -152,7 +146,7 @@ def plot_calibration_curve(calibration_plots, filename):
 
     for cali_plot in calibration_plots:
         (prob_true, prob_pred, y_prob), name = cali_plot
-        plt.plot(prob_true, prob_pred, label=name, marker='o')
+        plt.plot(prob_pred, prob_true, label=name, marker='o')
 
     plt.xlim([-.1, 1.1])
     plt.ylim([-.1, 1.1])
@@ -203,23 +197,20 @@ def main(argv):
 
     X = X[(y>1) & (y < 95)]
     y = y[(y>1) & (y < 95)]
-    y = np.log(y)
+    # y = np.log(y / 100)
+    y = y / 100
 
     y_labels_general =  np.where(y > np.quantile(y, 0.5), 1, 0)
     y_labels_tight =  np.where(y > np.quantile(y, 0.9), 1, 0)
 
-    z = y/100
-    logit_labels =  np.log(z / (1-z))
-    auc_plot_general, evaluation_general, coeffs_general, calibration_plot_general = train_and_evaluate_logistic(X,y, y)
-    auc_plot_tight, evaluation_tight, coeffs_tight, calibration_plot_tight = train_and_evaluate_logistic(X, y/100, y)
+    auc_plot_general, evaluation_general, coeffs_general, calibration_plot_general = train_and_evaluate_logistic(X, y_labels_general, y)
+    auc_plot_tight, evaluation_tight, coeffs_tight, calibration_plot_tight = train_and_evaluate_logistic(X, y_labels_tight, y)
 
-    """
     ## plot and save! 
     plot_auc_combined(auc_plot_general, auc_plot_tight, names=["50\% threshold model", "10\% threshold model"])
 
     plot_coefs_barth(coeffs_general, model_name="50\% threshold model", filename="50_threshold_model")
     plot_coefs_barth(coeffs_tight, model_name="weights 10\% threshold model", filename="10_threshold_model")
-    """
 
     plot_calibration_curve(
         (
