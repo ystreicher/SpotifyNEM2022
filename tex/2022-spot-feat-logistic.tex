@@ -96,7 +96,7 @@ In total, $62.8\%$ of all artists are removed from the dataset. This reduces the
 
 \subsection{Finding supergenres by clustering}
 \label{sec:genre_clustering}
-The genres associated with an artist are often finely granulated. Out of \todo{$111$} genres in total, only \todo{$111$} have more than \todo{$123$} artists associated with them. To reduce the number of overall genres to a handful of overarching \emph{supergenres}, such as Rock, Jazz, or Hip-Hop, we employ agglomerative clustering~\cite{ward1963hierarchical} (we use~\cite{scikit-learn}). Agglomerative clustering lends itself naturally for this as it exploits the inherent hierachical relationship between genres.
+The genres associated with an artist are often finely granulated. Out of $4713$ genres in total, only $496$ have more than $50$ artists associated with them. To reduce the number of overall genres to a handful of overarching \emph{supergenres}, such as Rock, Jazz, or Hip-Hop, we employ agglomerative clustering~\cite{ward1963hierarchical} (we use~\cite{scikit-learn}). Agglomerative clustering lends itself naturally for this as it exploits the inherent hierachical relationship between genres.
 
 Inspired by constrastive methods~\cite{mikolov2013efficient, chen2020simple}, we exploit the fact that related genres are more likely to be associated with the same artist to construct a distance measure. In a first step, a similarity measure $s_{i, j} = (2 n_{ij}) / (N_i + N_j)$ between the $i$-th and $j$-th genre is defined, where $n_{ij}$ denotes the number of times they appear together and $N_i, N_j$ the total counts of the $i$-th and $j$-th genre respectively. The distance can then be defined as the reciprocal of that similarity measure. We then use this distance measure for the clustering procedure.
 
@@ -108,7 +108,7 @@ By running the clustering algorithm on an aggressively filtered subset of genres
 
 \begin{figure}
   \centering
-  % \includegraphics[width=0.85\textwidth]{../figures/popularity_distribution_by_genre.pdf}
+  \includegraphics[width=0.85\textwidth]{../figures/popularity_distribution_by_genre.pdf}
   \caption{Box plot of popularity grouped by genre. Boxes span $Q1$ to $Q3$,while whiskers indicate the $5$-th and $95$-th percentile respectively. The central line shows the median of the distribution. Among all genres, Pop has the highest median and $95$-th percentile.}
   \label{fig:genre_boxplot}
 \end{figure}
@@ -117,16 +117,10 @@ The most prelevant genre on Spotify is Classical ($20.6\%$), followed by Rock ($
 
 The box plot presented in Fig.~\ref{fig:genre_boxplot} shows the distribution of popularity for each supergenre. We find that despite  being the most prominent genre, Clasical and Contempory Classical are by far the most unpopular with the majority of the probability mass below $10\%$. Notably, Pop has by far the heaviest tails and the highest median and $75$-th percentile of all genres despite only making up $2.9\%$ of all songs. Following after Pop, we find that Country, EDM, Latin, Rock, Indie Pop, Hip-Hop, and Metalcore are almost equally popular.
 
-Lastly, as a preliminary experiment for the logistic regression, we investigate the discriminative power of the musical features provided by Spotify. For this, we embedd the features of songs of the six most popular genres into a two-dimensional vector space using t-SNE~\cite{van2008visualizing} (we use~\cite{Policar731877}). Results are presented in Fig.~\ref{fig:tsne_genres} in the appendix. Clearly visible are distinct cluster of songs corresponding to genres such as Hip-Hop, Metal, Classical or Jazz. Additionally, genres that are arguably too some extent similar, such as Rock and Metal, or Jazz and Classical, are clustered close together.
+Lastly, as a preliminary experiment for the logistic regression, we investigate the discriminative power of the musical features provided by Spotify. For this, we embedd the features of songs of the six most prominent genres into a two-dimensional vector space using t-SNE~\cite{van2008visualizing} (we use~\cite{Policar731877}). Results are presented in Fig.~\ref{fig:tsne_genres} in the appendix. Clearly visible are distinct cluster of songs corresponding to genres such as Hip-Hop, Metal, Classical or Jazz. Additionally, genres that are arguably too some extent similar, such as Rock and Metal, or Jazz and Classical, are clustered close together.
 
 \subsection{Logistic Regression}
-% implicit assumtion: popularity = f(audio features)
-%For this project, the variable of interest is being \textit{popular} vs. \textit{unpopular} for individual tracks.
-%For the prediction we consider the \textit{audio features} for each of the tracks. 
-We verify whether a linear model is suitable to predict popularity from the musical features (c.f.~Section~\ref{sec:dataset}) by the application of standard linear regression\footnote{\url{https://www.statsmodels.org}}.
-The model yields significant but small coefficients that can only explain about \SI{10}{\percent} ($R^2 = 0.105$) of the variance in the data.
-The most prominent feature is \emph{loudness} with weight \num{0.027}.
-In order to get more insights, we use logistic regression\footnote{\url{https://scikit-learn.org}} to classify songs as either popular or unpopular. 
+Before applying logistic regression, we test if popularity can be predicted using linear regression from the musical features (c.f.~Section~\ref{sec:dataset}) as a preliminary experiment. We obtain significant but small coefficients that can only explain about \SI{10}{\percent} of the variance in the data. Loudness appears to be the most important feature according to the model. We now investigate if logistic regression can be used to classify songs as either popular or unpopular. 
 
 Binary labels are obtained by thresholding the popularity value of a song. Despite our aggressive filtering, we find that the popularity is roughly exponentially distributed. To deal with such a highly-skewed distribution, we try two thresholding strategies:
 \begin{enumerate}
@@ -138,12 +132,9 @@ In all experiments an 80-20 train-test split is used, and $\ell_2$-regularizaton
 
 Overall, model A achieves an accuracy of $0.59$, whereas model B achieves an accuracy of $0.62$ w.r.t. to their respective labels.
 A calibration plot is presented in Fig.~\ref{fig:logis_eval}~(left). 
-Both models fail to deliver a well-calibrated distribution of song-popularity.
-Those results, as well as, the low $R^2$ value of the linear regression model could be pointers to insufficient capacity of the linear model class.
-However, fitting a Multi-Layer Perceptron (MLP) can only marginally improve the results.
+Both models are poorly calibrated and possess higher mean $\ell_1$-loss than random guessing (not shown). Combinded with the low $R^2$-score of the linear model, this might indicate that popularity can only be poorly predicted using a linear relationship. To test if a higher capacity model could potentially improve performance, we further train a simple multilayer perceptron but report only marginally improved results.
 
-% weight interpretation - elaborate what stood out
-Nevertheless, we show learned coefficients of model B in Fig.~\ref{fig:logis_eval} (right). Especially loudness and danceability seem to be indicative of popularity according to the model. In contrast, acousticness, instrumentalness, energy, and valence appear to have a negative impact.
+Nevertheless, we show learned coefficients of model B in Fig.~\ref{fig:logis_eval} (right). Especially loudness and danceability seem to be indicative of popularity according to the model. This is in accodance with the linear regression model. In contrast, acousticness, instrumentalness, energy, and valence appear to have a negative impact.
 
 \begin{figure}
   \centering
