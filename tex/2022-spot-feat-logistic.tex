@@ -49,30 +49,25 @@
 \maketitle
 
 \begin{abstract}
-  What is the musical taste of the world? With the recent rise and global pervasiveness of music streaming services, such as Spotify, Deezer, or Apple Music, answering this question has become tractable. For this, we plan to analyze a \href{https://www.kaggle.com/rodolfofigueroa/spotify-12m-songs}{subset of 1.2 million songs} scraped from Spotify. However, this dataset lacks crucial information about popularity. Thus, an important step of our work is to augment the dataset further by querying the official Spotify REST API for a randomly sampled subset of the data. Besides a birds-eye overview of the musical landscape, e.g. distribution of genres, we want to identify common musical properties shared by popular songs, and likewise, very unpopular songs, using logistic regression. Such properties can be, for instance, tempo, mode, or key.
+  What is the musical taste of the world? With the recent rise and global pervasiveness of music streaming services, such as Spotify, or Apple Music, answering this question has potentially become tractable. For this, we analyze a subset of 1.2 million songs scraped from Spotify that we further augment with popularity and genre informations. While we find that the musical features extracted by Spotify are discriminative of the genre of a song, they are poor predictors of the populrity if used in a linear model, such as linear or logistic regression. Our results indicate that either more complex models are necessary or that the task itself is to some degree ill-posed, for instance due to a low signal-to-noise ratio.
 \end{abstract}
 
 \section{Introduction}
 
-%With the recent advent of musical streaming services, such as Spotify, or Apple Music, unprecedented amounts of data became readily available to a public audience. This data can often be accessed free-of-charge using an API provided by the service provider itself.
+Musical taste has historically always been changing. While Jazz has been highly popular throughout the 50s to 60s for instance, it has since then seen a steep decline and new trends, such as Funk, or Disco in the 70s, or Heavy Metal in the 80s, emerged. As songs within a genre often build upon the same musical foundation, e.g. the use of extended triads and swung-eigths in Jazz, this begs the question if the popularity of a song can be predicted from musical features alone.
 
+With the recent advent of musical streaming services, such as Spotify, or Apple Music, unprecedented amounts of music data became readily available to the public. This data can often be accessed free-of-charge using an API provided by the provider of the service itself. Due to their large userbase, popularity measures derived from these platforms provide a robust measure, at least for their target demographics.
 
-%% general overview - i) we want dataset and clusters, ii) we want to predict popularity
-%The large amount of digital music today can be daunting. To successfully navigate this space, we urgently need better knowledge of the key characteristics of this opaque, highdimensional space.
+In this work we want to explore if the musical features extracted by Spotify for individual songs, such as tempo or key, can be used to predict  its popularity. We are particular interessted in if this can be achieved using a simple linear model such as linear or logistic regression. This would allow direct interpretability of what musical properties a popular song possesses.
 
-With our work, we want to present two important findings that contribute to this goal in a twofold manner: \textit{First} we create a clear overview of the musical landscape. That is, by applying t-SNE (\todo{cite?}) we show a twodimensional embedding of the high dimensional space of audio tracks. We find clusters that can be labeled as musical \textit{genres}. \textit{Second}, we zoom in and, using logistic regression, distill audio features that are of particular interest when considering the popularity of an audio track.
-
-% motivation for the data: aggregate popularity measures with audio features
-% or, we are guided by spots popularity measure
-To predict the popularity of a song given its Spotify features, we have to find good labels that discriminate popular and unpopular songs.
-To measure users responses to individual songs, Spotify presents two metrics, \textit{(i): Popularity:} An algorithmically determined integer between 0 and 100 (more is better), based on the total number of (recent) plays a track has. Artist popularity is derived from the popularity of its individual tracks. The second feature is \textit{(ii): Followers} which is the number of accounts that subscribed to this artists Spotify feed. The number can be interpreted as peoples interest in following the new releases of a particular artist.
+Furthermore, we are interessted in how the musical landscape is shaped. To this end, we analyze the distribution of genres of songs available on Spotify and investigate if there are some genres which are particular popular or unpopular.
 
 \section{Dataset}
 \label{sec:dataset}
 
 While Spotify provides data about individual songs or artists via its API, it does, however, not provide a catalogue of available songs on its platform. Thus, we use a dataset\footnote{\url{https://www.kaggle.com/rodolfofigueroa/spotify-12m-songs}} of $1.2$ million songs made available on Kaggle, a subset of the $70$ million songs accessible on Spotify~\cite{ingham_2020}. This dataset was created by first downloading the \href{https://musicbrainz.org/}{MusicBrainz} catalogue, an open-collaboration database of music releases, and then querying the Spotify API. 
 
-For each song listed, the dataset contains basic meta informations such as artist and song name, as well as a set of $14$ song features that are provided by Spotify. These features include, among others, the estimated tempo, key, \emph{energy}, \emph{danceability}, or duration of the song. For a full list, refer to the Spotify API documentation. Crucially, the \emph{popularity} or genre of a song is not included in this dataset.
+For each song listed, the dataset contains basic meta informations such as artist and song name, as well as a set of $14$ song features that are provided by Spotify. These features include, among others, the estimated tempo, key, energy, danceability, or duration of the song. For a full list, refer to the Spotify API documentation. Crucially, the popularity or genre of a song is not included in this dataset.
 
 \subsection{Augmentation}
 In a first step we retrieve additional information of all $85,113$ artists appearing in the dataset from the Spotify API. This information include the populartiy of that artist, aggregated from individual songs, the number of followers, and optionally a list of genres the artist is associated with.
@@ -97,15 +92,15 @@ We find that the number of followers is roughly exponentially distributed. After
 
 Based on the popularity and log-follower count, we derive a robust filter criterion using principal component analysis~(PCA)~\cite{jolliffe2016principal}. After applying PCA, the first principal component is treated as a measure of the successfulness of an artist, taking both his popularity and followers into account. We threshold this measure to only include $50\%$ of all artists. Furthermore, we threshold the second component as well to remove outliers, i.e. artists with a high discrepancy between popularity and follower count. This step affects $1.6\%$ of all artists. Finally, we exclude those without associated genres.
 
-In total, if all three steps are applied, $62.8\%$ of all artists are removed from the dataset. This reduces the number of songs left in the dataset to $755472$ ($62.75\%$).
+In total, $62.8\%$ of all artists are removed from the dataset. This reduces the number of songs left in the dataset to $755472$ ($62.75\%$).
 
-\subsection{Finding metagenres by clustering}
+\subsection{Finding supergenres by clustering}
 \label{sec:genre_clustering}
-The genres associated with an artist are often very fine-granulated. Out of \todo{$111$} genres in total, only \todo{$111$} have more than \todo{$123$} artists associated with them. To reduce the number of overall genres to a handful of overarching \emph{metagenres}, such as Rock, Jazz, or Hip-Hop, we employ agglomerative clustering~\cite{ward1963hierarchical} (we use~\cite{scikit-learn}). Agglomerative clustering lends itself naturally for this task as it exploits the inherent hierachical relationship between genres.
+The genres associated with an artist are often finely granulated. Out of \todo{$111$} genres in total, only \todo{$111$} have more than \todo{$123$} artists associated with them. To reduce the number of overall genres to a handful of overarching \emph{supergenres}, such as Rock, Jazz, or Hip-Hop, we employ agglomerative clustering~\cite{ward1963hierarchical} (we use~\cite{scikit-learn}). Agglomerative clustering lends itself naturally for this as it exploits the inherent hierachical relationship between genres.
 
 Inspired by constrastive methods~\cite{mikolov2013efficient, chen2020simple}, we exploit the fact that related genres are more likely to be associated with the same artist to construct a distance measure. In a first step, a similarity measure $s_{i, j} = (2 n_{ij}) / (N_i + N_j)$ between the $i$-th and $j$-th genre is defined, where $n_{ij}$ denotes the number of times they appear together and $N_i, N_j$ the total counts of the $i$-th and $j$-th genre respectively. The distance can then be defined as the reciprocal of that similarity measure. We then use this distance measure for the clustering procedure.
 
-By running the clustering algorithm on an aggressively filtered subset of genres, we find $32$ metagenres, among them Jazz, Classical, Metal, Rock, Pop, or EDM, but also Soundtrack, or Show Tunes\footnote{Metagenres have been manually annotated}. These cover $60.5\%$ of all songs in the filtered dataset. To further improve coverage of songs, we rerun the clustering with less aggressive filtering to include more fine-grained genres. We then manually append these additional subgenres to the appropriate metagenre if applicable. This improves coverage to $71.3\%$.
+By running the clustering algorithm on an aggressively filtered subset of genres, we find $32$ supergenres, among them Jazz, Classical, Metal, Rock, Pop, or EDM, but also Soundtrack, or Show Tunes\footnote{Supergenres have been manually annotated}. These cover $60.5\%$ of all songs in the filtered dataset. To further improve coverage of songs, we rerun the clustering with less aggressive filtering to include more fine-grained genres. We then manually append these additional subgenres to the appropriate supergenre if applicable. This improves coverage to $71.3\%$.
 
 \section{Experiments}
 
@@ -118,17 +113,17 @@ By running the clustering algorithm on an aggressively filtered subset of genres
   \label{fig:genre_boxplot}
 \end{figure}
 
-The most prelevant genre on Spotify is Classical ($20.6\%$), followed by Rock ($7.9\%$), Rap / Hip-Hop ($7.6\%$), Metal ($6.3\%$), Folk ($6.0\%$), and Jazz ($4.0\%$). For a full overview, we refer to the supplementary material available on github\footnote{\url{https://github.com/ystreicher/SpotifyNEM2022}}.
+The most prelevant genre on Spotify is Classical ($20.6\%$), followed by Rock ($7.9\%$), Rap / Hip-Hop ($7.6\%$), Metal ($6.3\%$), Folk ($6.0\%$), and Jazz ($4.0\%$). For a complete listing, we refer to the supplementary material available on github\footnote{\url{https://github.com/ystreicher/SpotifyNEM2022}}.
 
-The box plot presented in Fig.~\ref{fig:genre_boxplot} shows the distribution of popularity for each genre. We find that despite  being the most prominent genre, Clasical and Contempory Classical are by far the most unpopular with the majority of the probability mass below $10\%$. Notably, Pop has by far the heaviest tails and the highest median and $75$-th percentile of all genres despite only making up $2.9\%$ of all songs. Following after Pop, we find that Country, EDM, Latin, Rock, Indie Pop, Hip-Hop, and Metalcore are almost equally popular.  
+The box plot presented in Fig.~\ref{fig:genre_boxplot} shows the distribution of popularity for each supergenre. We find that despite  being the most prominent genre, Clasical and Contempory Classical are by far the most unpopular with the majority of the probability mass below $10\%$. Notably, Pop has by far the heaviest tails and the highest median and $75$-th percentile of all genres despite only making up $2.9\%$ of all songs. Following after Pop, we find that Country, EDM, Latin, Rock, Indie Pop, Hip-Hop, and Metalcore are almost equally popular.
 
-Lastly, as a preliminary experiment for the logistic regression, we investigate the discriminative power of the song features provided by Spotify. For this, we embedd the features of songs of the six most popular genres into a two-dimensional vector space using t-SNE~\cite{van2008visualizing} (we use~\cite{Policar731877}). Results are presented in Fig.~\ref{fig:tsne_genres} in the appendix. Clearly visible are distinct cluster of songs corresponding to genres such as Hip-Hop, Metal, Classical or Jazz. Additionally, genres that are arguably related to each other, such as Rock and Metal, or Jazz and Classical, are clustered close together or have some overlap.
+Lastly, as a preliminary experiment for the logistic regression, we investigate the discriminative power of the musical features provided by Spotify. For this, we embedd the features of songs of the six most popular genres into a two-dimensional vector space using t-SNE~\cite{van2008visualizing} (we use~\cite{Policar731877}). Results are presented in Fig.~\ref{fig:tsne_genres} in the appendix. Clearly visible are distinct cluster of songs corresponding to genres such as Hip-Hop, Metal, Classical or Jazz. Additionally, genres that are arguably too some extent similar, such as Rock and Metal, or Jazz and Classical, are clustered close together.
 
 \subsection{Logistic Regression}
 % implicit assumtion: popularity = f(audio features)
 %For this project, the variable of interest is being \textit{popular} vs. \textit{unpopular} for individual tracks.
 %For the prediction we consider the \textit{audio features} for each of the tracks. 
-We use logistic regression to classify songs as either popular or unpopular using the audio features (c.f. Section~\ref{sec:dataset}) provided by Spotify. 
+We use logistic regression to classify songs as either popular or unpopular using the music features (c.f. Section~\ref{sec:dataset}) provided by Spotify. 
 
 Binary labels are obtained by thresholding the popularity value of a song. Despite our aggressive filtering, we found that the popularity is roughly exponentially distributed. To deal with such a highly-skewed distribution, we try two thresholding strategies:
 \begin{enumerate}
