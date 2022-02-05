@@ -60,7 +60,7 @@ With the recent advent of musical streaming services, such as Spotify, or Apple 
 
 In this work we want to explore if the musical features extracted by Spotify for individual songs, such as tempo or key, can be used to predict  its popularity. We are particular interessted in if this can be achieved using a simple linear model such as linear or logistic regression. This would allow direct interpretability of what musical properties a popular song possesses.
 
-Furthermore, we are interessted in how the musical landscape is shaped. To this end, we analyze the distribution of genres of songs available on Spotify and investigate if there are some genres which are particular popular or unpopular.
+Furthermore, we are interessted in how todays musical landscape is shaped. To this end, we analyze the distribution of genres of songs available on Spotify and investigate if there are some genres which are particular popular or unpopular.
 
 \section{Dataset}
 \label{sec:dataset}
@@ -134,7 +134,7 @@ Overall, model A achieves an accuracy of $0.59$, whereas model B achieves an acc
 A calibration plot is presented in Fig.~\ref{fig:logis_eval}~(left). 
 Both models are poorly calibrated and possess higher mean $\ell_1$-loss than random guessing (not shown). Combinded with the low $R^2$-score of the linear model, this might indicate that popularity can only be poorly predicted using a linear relationship. To test if a higher capacity model could potentially improve performance, we further train a simple multilayer perceptron but report only marginally improved results.
 
-Nevertheless, we show learned coefficients of model B in Fig.~\ref{fig:logis_eval} (right). Especially loudness and danceability seem to be indicative of popularity according to the model. This is in accodance with the linear regression model. In contrast, acousticness, instrumentalness, energy, and valence appear to have a negative impact.
+Nevertheless, we show learned coefficients of model B in Fig.~\ref{fig:logis_eval} (right). In accordance with the linear regression, especially loudness and danceability seem to be indicative of popularity. In contrast, acousticness, instrumentalness, energy, and valence appear to have a negative impact.
 
 \begin{figure}
   \centering
@@ -150,11 +150,13 @@ Nevertheless, we show learned coefficients of model B in Fig.~\ref{fig:logis_eva
 
 In this work, we gave an overview of the musical landscape as seen by Spotify.
 We demonstrated that agglomerative clustering can successfully be applied to aggregate the thousands of microgenres identified by Spotify's algorithm into a handful of supergenres. 
-Furthermore, we have shown that the musical features provided by Spotify's API are highly discriminative in terms of \emph{musical relatedness}, by applying t-SNE and showing that songs of the same genre are spatially close in  feature space. 
-Despite the fact that we can discriminate genres by popularity (see Section~3), linear models fail to robustly classify individual songs as popular or unpopular.
+Furthermore, we have shown that the musical features provided by Spotify's API are highly discriminative in terms of \emph{musical relatedness} by applying t-SNE and showing that songs of the same genre are spatially close in  feature space. Despite some genres being less and more popular than others, we find linear models to be only poor predictors of the popularity of an individual song.
 
-The experiments show that loudness correlates, albeit very weakly, with the popularity of a song. But this does not mean that louder songs are more popular. Rather, it is evidence that more successful tracks often come from high-end production facilities. 
-The work allows two conclusions: Either, the crucial factors for popularity are not represented in the data set, or, higher capacity models are needed to solve the problem.
+Contrary to previous results~\cite{viney2008obsession} ($n=30$), our experiments show that loudness correlates, albeit very weakly, with the popularity of a song. This does not necessarily imply a causation however. Rather, it could be indicative of the previously recognized \emph{loudness war}~\cite{vickers2010loudness}. Either, because successful songs are more likely to have undergone a rigorous mixing and mastering process, or because more recently released songs, thus on-average louder songs, are more popular by construction of the metric.
+
+Our results provide some evidence that the musical properties of a song might only have a minor impact on its popularity and commercial success. As previously recognized in the literature~\cite{viney2008obsession}, other factors not covered in the data, such as marketing efforts, or radio and television airplay might have a much bigger impact instead. Finally, it is not unreasonable to assume that popularity is inherently very noisy, i.e. dominated by chance.  
+
+%The work allows two conclusions: Either, the crucial factors for popularity are not represented in the data set, or, higher capacity models are needed to solve the problem.
 
 
 \bibliography{bibliography}
