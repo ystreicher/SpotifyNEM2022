@@ -16,6 +16,10 @@
 
 ## Supplementary Material
 
+#### t-SNE 
+
+![t-SNE plot](figures/github/tsne_genres.png)
+
 #### Filtering procedure
 
 To reduce potential noise introduced by unknown self-published artists, we want to restrict our analysis to those that can be considered professional or semi-professional musicians. This step was deemed necessary, as self-published artists do not undergo the feedback and quality control process a regular music label would provide. Indeed, we find that a quarter of artists on Spotify have less than 45 followers and half of all artist have less than 393.
@@ -26,9 +30,6 @@ Based on the popularity and log-follower count, we derive a robust filter criter
 
 In total, 62.8% of all artists are removed from the dataset. This reduces the number of songs left in the dataset to 755472 (62.75%).
 
-#### t-SNE 
-
-![t-SNE plot](figures/github/tsne_genres.png)
 
 #### Distribution of supergenres:
 ![Distribution of genres](figures/github/genre_distribution.png)
