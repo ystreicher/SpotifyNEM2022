@@ -28,7 +28,7 @@ In total, 62.8% of all artists are removed from the dataset. This reduces the nu
 
 #### t-SNE 
 
-[t-SNE figure](figures/tsne_genres.pdf)
+![t-SNE plot](figures/github/tsne_genres.png)
 
 #### Distribution of supergenres:
 ![Distribution of genres](figures/github/genre_distribution.png)
